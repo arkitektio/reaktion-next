@@ -1,24 +1,21 @@
 from typing import Protocol, runtime_checkable
 from rekuest.postmans.utils import RPCContract, arkiuse, mockuse, actoruse
-from fluss.api.schema import (
-    ArkitektNodeFragment,
-    FlowNodeFragmentBaseArkitektNode,
-    LocalNodeFragment,
+from fluss_next.api.schema import (
+    RekuestNodeFragmentBase,
 )
 from rekuest.api.schema import afind, ReserveBindsInput, amytemplatefor, NodeScope
 from rekuest.postmans.vars import get_current_postman
-from rekuest.structures.registry import get_current_structure_registry
 from rekuest.actors.base import Actor
 
 
 @runtime_checkable
 class NodeContractor(Protocol):
     async def __call__(
-        self, node: ArkitektNodeFragment, actor: Actor
+        self, node: RekuestNodeFragmentBase, actor: Actor
     ) -> RPCContract: ...
 
 
-async def arkicontractor(node: ArkitektNodeFragment, actor: Actor) -> RPCContract:
+async def arkicontractor(node: RekuestNodeFragmentBase, actor: Actor) -> RPCContract:
     try:
         template = await amytemplatefor(
             hash=node.hash, instance_id=actor.agent.instance_id
@@ -58,7 +55,9 @@ async def arkicontractor(node: ArkitektNodeFragment, actor: Actor) -> RPCContrac
         )  # No need to shrink inputs/outsputs for arkicontractors
 
 
-async def arkimockcontractor(node: ArkitektNodeFragment, actor: Actor) -> RPCContract:
+async def arkimockcontractor(
+    node: RekuestNodeFragmentBase, actor: Actor
+) -> RPCContract:
     return mockuse(
         node=node,
         provision=actor.passport.provision,

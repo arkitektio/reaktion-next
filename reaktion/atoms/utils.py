@@ -1,14 +1,13 @@
 from typing import Awaitable, Callable, Dict
 from rekuest.api.schema import AssignationLogLevel, NodeKind
 from rekuest.messages import Assignation
-from fluss.api.schema import (
-    ArkitektNodeFragment,
-    LocalNodeFragment,
-    FlowNodeFragment,
-    ArkitektFilterNodeFragment,
-    ReactiveImplementationModelInput,
+from fluss_next.api.schema import (
+    RekuestFilterNodeFragment,
+    RekuestMapNodeFragment,
     ReactiveNodeFragment,
+    BaseGraphNodeFragmentBase,
     MapStrategy,
+    ReactiveImplementation,
 )
 import asyncio
 from reaktion_next.atoms.arkitekt import (
@@ -18,7 +17,6 @@ from reaktion_next.atoms.arkitekt import (
     ArkitektOrderedAtom,
 )
 from reaktion_next.atoms.arkitekt_filter import ArkitektFilterAtom
-from reaktion_next.atoms.local import LocalMapAtom, LocalMergeMapAtom
 from reaktion_next.atoms.transformation.chunk import ChunkAtom
 from reaktion_next.atoms.transformation.buffer_complete import BufferCompleteAtom
 from reaktion_next.atoms.transformation.split import SplitAtom
@@ -36,14 +34,14 @@ from reaktion_next.atoms.operations.math import MathAtom, operation_map
 
 
 def atomify(
-    node: FlowNodeFragment,
+    node: BaseGraphNodeFragmentBase,
     transport: AtomTransport,
     contract: Optional[RPCContract],
     globals: Dict[str, Any],
     assignment: Assignment,
     alog: Callable[[Assignation, AssignationLogLevel, str], Awaitable[None]] = None,
 ) -> Atom:
-    if isinstance(node, ArkitektNodeFragment):
+    if isinstance(node, RekuestMapNodeFragment):
         if node.kind == NodeKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektMapAtom(
@@ -81,7 +79,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-    if isinstance(node, ArkitektFilterNodeFragment):
+    if isinstance(node, RekuestFilterNodeFragment):
         if node.kind == NodeKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektFilterAtom(
@@ -95,28 +93,8 @@ def atomify(
         if node.kind == NodeKind.GENERATOR:
             raise NotImplementedError("Generator cannot be used as a filter")
 
-    if isinstance(node, LocalNodeFragment):
-        if node.kind == NodeKind.FUNCTION:
-            return LocalMapAtom(
-                node=node,
-                contract=contract,
-                transport=transport,
-                assignment=assignment,
-                globals=globals,
-                alog=alog,
-            )
-        if node.kind == NodeKind.GENERATOR:
-            return LocalMergeMapAtom(
-                node=node,
-                contract=contract,
-                transport=transport,
-                assignment=assignment,
-                globals=globals,
-                alog=alog,
-            )
-
     if isinstance(node, ReactiveNodeFragment):
-        if node.implementation == ReactiveImplementationModelInput.ZIP:
+        if node.implementation == ReactiveImplementation.ZIP:
             return ZipAtom(
                 node=node,
                 transport=transport,
@@ -124,7 +102,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.FILTER:
+        if node.implementation == ReactiveImplementation.FILTER:
             return FilterAtom(
                 node=node,
                 transport=transport,
@@ -132,7 +110,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.CHUNK:
+        if node.implementation == ReactiveImplementation.CHUNK:
             return ChunkAtom(
                 node=node,
                 transport=transport,
@@ -140,7 +118,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.GATE:
+        if node.implementation == ReactiveImplementation.GATE:
             return GateAtom(
                 node=node,
                 transport=transport,
@@ -148,7 +126,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.BUFFER_COMPLETE:
+        if node.implementation == ReactiveImplementation.BUFFER_COMPLETE:
             return BufferCompleteAtom(
                 node=node,
                 transport=transport,
@@ -156,7 +134,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.WITHLATEST:
+        if node.implementation == ReactiveImplementation.WITHLATEST:
             return WithLatestAtom(
                 node=node,
                 transport=transport,
@@ -164,7 +142,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.COMBINELATEST:
+        if node.implementation == ReactiveImplementation.COMBINELATEST:
             return WithLatestAtom(
                 node=node,
                 transport=transport,
@@ -172,7 +150,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.SPLIT:
+        if node.implementation == ReactiveImplementation.SPLIT:
             return SplitAtom(
                 node=node,
                 transport=transport,
@@ -180,7 +158,7 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
-        if node.implementation == ReactiveImplementationModelInput.ALL:
+        if node.implementation == ReactiveImplementation.ALL:
             return AllAtom(
                 node=node,
                 transport=transport,

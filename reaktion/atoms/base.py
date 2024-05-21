@@ -3,7 +3,7 @@ from typing import Awaitable, Callable, Optional
 from pydantic import BaseModel, Field
 from rekuest.api.schema import AssignationLogLevel
 from rekuest.messages import Assignation
-from fluss.api.schema import FlowNodeCommonsFragmentBase
+from fluss_next.api.schema import BaseGraphNodeFragmentBase
 from reaktion_next.atoms.errors import AtomQueueFull
 from reaktion_next.events import EventType, InEvent, OutEvent
 import logging
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class Atom(BaseModel):
-    node: FlowNodeCommonsFragmentBase
+    node: BaseGraphNodeFragmentBase
     transport: AtomTransport
     alog: Optional[Callable[[str, AssignationLogLevel, str], Awaitable[None]]] = Field(
         exclude=True

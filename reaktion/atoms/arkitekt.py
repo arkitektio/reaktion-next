@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 from rekuest.postmans.utils import RPCContract
 from reaktion_next.atoms.helpers import node_to_reference
 
-from fluss.api.schema import ArkitektNodeFragment
+from fluss_next.api.schema import RekuestMapNodeFragment
 
 from reaktion_next.atoms.generic import (
     MapAtom,
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArkitektMapAtom(MapAtom):
-    node: ArkitektNodeFragment
+    node: RekuestMapNodeFragment
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
@@ -45,7 +45,7 @@ class ArkitektMapAtom(MapAtom):
 
 
 class ArkitektMergeMapAtom(MergeMapAtom):
-    node: ArkitektNodeFragment
+    node: RekuestMapNodeFragment
     contract: RPCContract
 
     async def merge_map(self, event: InEvent) -> Optional[List[Any]]:
@@ -69,7 +69,7 @@ class ArkitektMergeMapAtom(MergeMapAtom):
 
 
 class ArkitektAsCompletedAtom(AsCompletedAtom):
-    node: ArkitektNodeFragment
+    node: RekuestMapNodeFragment
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
@@ -94,7 +94,7 @@ class ArkitektAsCompletedAtom(AsCompletedAtom):
 
 
 class ArkitektOrderedAtom(OrderedAtom):
-    node: ArkitektNodeFragment
+    node: RekuestMapNodeFragment
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:

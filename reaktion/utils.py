@@ -1,23 +1,21 @@
 from typing import List, Optional
-from rekuest.api.schema import NodeKindInput, DefinitionInput, PortInput, NodeKind
-from fluss.api.schema import (
-    FlowFragmentGraph,
-    FlowNodeFragmentBaseArkitektNode,
-    FlowNodeFragmentBaseReactiveNode,
-    ReactiveImplementationModelInput,
+from rekuest_next.api.schema import DefinitionInput, PortInput, NodeKind
+from fluss_next.api.schema import (
+    GraphFragment,
+    RekuestNodeFragmentBase,
+    ReactiveNodeFragment,
+    ReactiveImplementation,
+    ArgNodeFragment,
+    ReturnNodeFragment,
+    GlobalArgFragment,
     FlowFragment,
-    LocalNodeFragment,
-    ArkitektNodeFragment,
-    GraphNodeFragment,
 )
 from .events import OutEvent, InEvent
 import pydantic
 from .errors import FlowLogicError
 
 
-def connected_events(
-    graph: FlowFragmentGraph, event: OutEvent, t: int
-) -> List[InEvent]:
+def connected_events(graph: GraphFragment, event: OutEvent, t: int) -> List[InEvent]:
     events = []
 
     for edge in graph.edges:
@@ -38,17 +36,17 @@ def connected_events(
     return events
 
 
-def infer_kind_from_graph(graph: FlowFragmentGraph) -> NodeKindInput:
-    kind = NodeKindInput.FUNCTION
+def infer_kind_from_graph(graph: GraphFragment) -> NodeKind:
+    kind = NodeKind.FUNCTION
 
     for node in graph.nodes:
-        if isinstance(node, FlowNodeFragmentBaseArkitektNode):
-            if node.kind == NodeKindInput.GENERATOR:
-                kind = NodeKindInput.GENERATOR
+        if isinstance(node, RekuestNodeFragmentBase):
+            if node.kind == NodeKind.GENERATOR:
+                kind = NodeKind.GENERATOR
                 break
-        if isinstance(node, FlowNodeFragmentBaseReactiveNode):
-            if node.implementation == ReactiveImplementationModelInput.CHUNK:
-                kind = NodeKindInput.GENERATOR
+        if isinstance(node, ReactiveNodeFragment):
+            if node.implementation == ReactiveImplementation.CHUNK:
+                kind = NodeKind.GENERATOR
                 break
 
     return kind
@@ -58,25 +56,22 @@ def convert_flow_to_definition(
     flow: FlowFragment,
     name: str = None,
     description: str = None,
-    kind: Optional[NodeKindInput] = None,
+    kind: Optional[NodeKind] = None,
 ) -> DefinitionInput:
     # assert localnodes are in the definitionregistry
-    localNodes = [x for x in flow.graph.nodes if isinstance(x, LocalNodeFragment)]
-    graphNodes = [x for x in flow.graph.nodes if isinstance(x, GraphNodeFragment)]
-    assert len(graphNodes) == 0, "GraphNodes are not supported yet"
 
-    for node in localNodes:
-        assert node.hash, f"LocalNode {node.name} must have a definition"
+    argNode = [x for x in flow.graph.nodes if isinstance(x, ArgNodeFragment)][0]
+    returnNode = [x for x in flow.graph.nodes if isinstance(x, ReturnNodeFragment)][0]
 
-    args = [PortInput(**x.dict(by_alias=True)) for x in flow.graph.args]
-    returns = [PortInput(**x.dict(by_alias=True)) for x in flow.graph.returns]
+    args = [PortInput(**x.dict(by_alias=True)) for x in argNode.outs[0]]
+    returns = [PortInput(**x.dict(by_alias=True)) for x in returnNode.ins[0]]
 
     globals = [
         PortInput(**glob.port.dict(by_alias=True)) for glob in flow.graph.globals
     ]
 
     return DefinitionInput(
-        name=name or flow.workspace.name,
+        name=name or flow.title,
         kind=kind or infer_kind_from_graph(flow.graph),
         args=args + globals,
         returns=returns,

@@ -5,12 +5,13 @@ import logging
 from rekuest_next.register import register_func
 from rekuest_next.actors.base import Actor
 from rekuest_next.actors.types import Passport, Assignment
-from fluss.api.schema import aget_flow
+from fluss_next.api.schema import RekuestNodeFragmentBase, aget_flow
 from rekuest_next.api.schema import NodeKind
 
 from typing import Optional
 from rekuest_next.api.schema import (
     PortInput,
+    DependencyInput,
     DefinitionInput,
     TemplateFragment,
     NodeKind,
@@ -18,10 +19,8 @@ from rekuest_next.api.schema import (
     afind,
 )
 from fakts.fakts import Fakts
-from fluss.api.schema import (
+from fluss_next.api.schema import (
     FlowFragment,
-    LocalNodeFragment,
-    GraphNodeFragment,
 )
 from reaktion_next.utils import infer_kind_from_graph
 from rekuest_next.widgets import StringWidget
@@ -42,8 +41,8 @@ class ReaktionExtension(BaseModel):
     structure_registry: StructureRegistry = Field(
         default_factory=get_default_structure_registry
     )
-    definition_reigstry: DefinitionRegistry = Field(default_factory=DefinitionRegistry)
-    extension_name: str = "reaktion_next"
+    definition_registry: DefinitionRegistry = Field(default_factory=DefinitionRegistry)
+    extension_name: str = "reaktion"
 
     async def aspawn_actor_from_template(
         self,
@@ -56,7 +55,7 @@ class ReaktionExtension(BaseModel):
         """Spawns an Actor from a Provision. This function closely mimics the
         spawining protocol within an actor. But maps template"""
         try:
-            actor_builder = self.definition_reigstry.get_builder_for_interface(
+            actor_builder = self.definition_registry.get_builder_for_interface(
                 template.interface
             )
 
@@ -89,10 +88,10 @@ class ReaktionExtension(BaseModel):
         definition, actorBuilder = reactify(
             self.deploy_graph,
             self.structure_registry,
-            interfaces=["fluss:deploy"],
+            interfaces=["fluss_next:deploy"],
         )
 
-        self.definition_reigstry.register_at_interface(
+        self.definition_registry.register_at_interface(
             "deploy_graph",
             definition=definition,
             structure_registry=self.structure_registry,
@@ -102,17 +101,17 @@ class ReaktionExtension(BaseModel):
         definition, actorBuilder = reactify(
             self.undeploy_graph,
             self.structure_registry,
-            interfaces=["fluss:undeploy"],
+            interfaces=["fluss_next:undeploy"],
         )
 
-        self.definition_reigstry.register_at_interface(
+        self.definition_registry.register_at_interface(
             "undeploy_graph",
             definition=definition,
             structure_registry=self.structure_registry,
             actorBuilder=actorBuilder,
         )
 
-        return self.definition_reigstry
+        return self.definition_registry
 
     async def deploy_graph(
         self,
@@ -133,7 +132,18 @@ class ReaktionExtension(BaseModel):
         Returns:
             TemplateFragment: The created template
         """
-        assert flow.name, "Graph must have a Name in order to be deployed"
+        print("Deploying graph")
+        assert flow.title, "Graph must have a Name in order to be deployed"
+
+        dependencies = [
+            DependencyInput(
+                hash=x.hash,
+                reference=x.id,
+                optional=False,
+            )
+            for x in flow.graph.nodes
+            if isinstance(x, RekuestNodeFragmentBase)
+        ]  # TODO: Check for local nodes
 
         template = await acreate_template(
             interface=f"flow:{flow.id}",
@@ -142,7 +152,8 @@ class ReaktionExtension(BaseModel):
             ),
             instance_id=useInstanceID(),
             params={"flow": flow.id},
-            extensions=["reaktion_next"],
+            extension=self.extension_name,
+            dependencies=dependencies,
         )
 
         return template

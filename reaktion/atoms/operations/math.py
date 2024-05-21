@@ -2,7 +2,7 @@ import asyncio
 from typing import List
 from reaktion_next.atoms.operations.base import OperationAtom
 from reaktion_next.events import EventType, OutEvent
-from fluss.api.schema import ReactiveImplementationModelInput
+from fluss_next.api.schema import ReactiveImplementation
 import logging
 import operator
 
@@ -11,12 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 operation_map = {
-    ReactiveImplementationModelInput.ADD: operator.add,
-    ReactiveImplementationModelInput.SUBTRACT: operator.sub,
-    ReactiveImplementationModelInput.MULTIPLY: operator.mul,
-    ReactiveImplementationModelInput.DIVIDE: operator.truediv,
-    ReactiveImplementationModelInput.MODULO: operator.mod,
-    ReactiveImplementationModelInput.POWER: operator.pow,
+    ReactiveImplementation.ADD: operator.add,
+    ReactiveImplementation.SUBTRACT: operator.sub,
+    ReactiveImplementation.MULTIPLY: operator.mul,
+    ReactiveImplementation.DIVIDE: operator.truediv,
+    ReactiveImplementation.MODULO: operator.mod,
+    ReactiveImplementation.POWER: operator.pow,
 }
 
 

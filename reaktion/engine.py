@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from fluss.api.schema import FlowFragmentGraph
+from fluss_next.api.schema import FlowFragmentGraph
 
 
 class ReaktionEngine(BaseModel):
