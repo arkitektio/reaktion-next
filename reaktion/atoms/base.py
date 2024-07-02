@@ -1,13 +1,11 @@
 import asyncio
 from typing import Awaitable, Callable, Optional
 from pydantic import BaseModel, Field
-from rekuest.api.schema import AssignationLogLevel
-from rekuest.messages import Assignation
 from fluss_next.api.schema import BaseGraphNodeFragmentBase
 from reaktion_next.atoms.errors import AtomQueueFull
 from reaktion_next.events import EventType, InEvent, OutEvent
 import logging
-from rekuest.actors.types import Assignment
+from rekuest_next.actors.types import Assignment
 from reaktion_next.atoms.transport import AtomTransport
 from typing import Dict, Any
 
@@ -17,9 +15,7 @@ logger = logging.getLogger(__name__)
 class Atom(BaseModel):
     node: BaseGraphNodeFragmentBase
     transport: AtomTransport
-    alog: Optional[Callable[[str, AssignationLogLevel, str], Awaitable[None]]] = Field(
-        exclude=True
-    )
+    alog: Optional[Callable[[str, str, str], Awaitable[None]]] = Field(exclude=True)
     globals: Dict[str, Any] = Field(default_factory=dict)
     assignment: Assignment
 

@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict
+from typing import Callable, Dict, Optional
 import asyncio
 from pydantic import BaseModel, Field
 
@@ -10,7 +10,7 @@ from fluss_next.api.schema import (
     ReactiveNodeFragment,
     RekuestFilterNodeFragment,
     ReturnNodeFragment,
-    arun,
+    acreate_run,
     asnapshot,
     atrack,
 )
@@ -59,7 +59,7 @@ class FlowActor(Actor):
     # Functionality for running the flow
 
     # Assign Related Functionality
-    run_mutation: Callable = arun
+    run_mutation: Callable = acreate_run
     snapshot_mutation: Callable = asnapshot
     track_mutation: Callable = atrack
 
@@ -72,12 +72,21 @@ class FlowActor(Actor):
     ] = Field(default_factory=dict)
 
     reservation_state: Dict[str, ReservationFragment] = Field(default_factory=dict)
-    _lock = None
+    _lock: Optional[asyncio.Lock] = None
     _condition = None
 
     async def on_provide(self, passport: Passport):
         self._lock = asyncio.Lock()
 
+    async def on_local_log(self, reference, *args, **kwargs):
+        logger.log(f"Contract log for {reference} {args} {kwargs}")
+
+    async def on_assign(
+        self,
+        assignment: Assignment,
+        collector: AssignationCollector,
+        transport: AssignTransport,
+    ):
         rekuest_nodes = [
             x for x in self.flow.graph.nodes if isinstance(x, RekuestNodeFragmentBase)
         ]
@@ -91,23 +100,12 @@ class FlowActor(Actor):
         futures = [contract.aenter() for contract in self.contracts.values()]
         await asyncio.gather(*futures)
 
-    async def on_local_log(self, reference, *args, **kwargs):
-        logger.log(f"Contract log for {reference} {args} {kwargs}")
-
-    async def on_assign(
-        self,
-        assignment: Assignment,
-        collector: AssignationCollector,
-        transport: AssignTransport,
-    ):
         run = await self.run_mutation(
             assignation=assignment.assignation,
             flow=self.flow,
             snapshot_interval=self.snapshot_interval,
         )
         print(self.is_generator)
-
-        await transport.log(level="INFO", message="Starting")
 
         t = 0
         state = {}
@@ -132,9 +130,7 @@ class FlowActor(Actor):
                 or isinstance(x, ReactiveNodeFragment)
             ]
 
-            await transport.log(level="INFO", message="Set up the graph")
-
-            stream = self.flow.graph.args
+            stream = argNode.outs[0]
             stream_keys = []
             for i in stream:
                 stream_keys.append(i.key)
@@ -172,8 +168,6 @@ class FlowActor(Actor):
                 for x in participatingNodes
             }
 
-            await transport.log(level="INFO", message="Atomification complete")
-
             await asyncio.gather(*[atom.aenter() for atom in atoms.values()])
             tasks = [asyncio.create_task(atom.start()) for atom in atoms.values()]
             logger.info("Starting all Atoms")
@@ -202,7 +196,7 @@ class FlowActor(Actor):
             nodes_without_instream = [
                 x
                 for x in participatingNodes
-                if len(x.instream[0]) == 0 and x.id not in edge_targets
+                if len(x.ins[0]) == 0 and x.id not in edge_targets
             ]
 
             for node in nodes_without_instream:
@@ -234,11 +228,10 @@ class FlowActor(Actor):
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
 
-                if self.flow.brittle:
-                    if event.type == EventType.ERROR:
-                        raise event.value
+                if event.type == EventType.ERROR:
+                    raise event.value
 
-                track = await self.track_mutation(
+                """ track = await self.track_mutation(
                     run=run,
                     source=event.source,
                     handle=event.handle,
@@ -249,7 +242,7 @@ class FlowActor(Actor):
                     type=event.type,
                     t=t,
                 )
-                state[event.source] = track.id
+                state[event.source] = track.id """
 
                 # We tracked the events and proceed
 

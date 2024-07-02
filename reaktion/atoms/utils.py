@@ -1,13 +1,15 @@
 from typing import Awaitable, Callable, Dict
-from rekuest.api.schema import AssignationLogLevel, NodeKind
 from rekuest.messages import Assignation
 from fluss_next.api.schema import (
     RekuestFilterNodeFragment,
     RekuestMapNodeFragment,
+    GraphNodeFragmentBaseRekuestFilterNode,
+    GraphNodeFragmentBaseRekuestMapNode,
     ReactiveNodeFragment,
     BaseGraphNodeFragmentBase,
     MapStrategy,
     ReactiveImplementation,
+    NodeKind,
 )
 import asyncio
 from reaktion_next.atoms.arkitekt import (
@@ -39,10 +41,10 @@ def atomify(
     contract: Optional[RPCContract],
     globals: Dict[str, Any],
     assignment: Assignment,
-    alog: Callable[[Assignation, AssignationLogLevel, str], Awaitable[None]] = None,
+    alog: Callable[[Assignation, str, str], Awaitable[None]] = None,
 ) -> Atom:
     if isinstance(node, RekuestMapNodeFragment):
-        if node.kind == NodeKind.FUNCTION:
+        if node.node_kind == NodeKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektMapAtom(
                     node=node,
@@ -70,7 +72,11 @@ def atomify(
                     globals=globals,
                     alog=alog,
                 )
-        if node.kind == NodeKind.GENERATOR:
+
+            raise NotImplementedError(
+                f"Map strategy {node.map_strategy} is not implemented"
+            )
+        if node.node_kind == NodeKind.GENERATOR:
             return ArkitektMergeMapAtom(
                 node=node,
                 contract=contract,
@@ -79,8 +85,10 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
+
+        raise NotImplementedError(f"Node kind {node.kind} is not implemented")
     if isinstance(node, RekuestFilterNodeFragment):
-        if node.kind == NodeKind.FUNCTION:
+        if node.node_kind == NodeKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektFilterAtom(
                     node=node,
@@ -90,7 +98,7 @@ def atomify(
                     globals=globals,
                     alog=alog,
                 )
-        if node.kind == NodeKind.GENERATOR:
+        if node.node_kind == NodeKind.GENERATOR:
             raise NotImplementedError("Generator cannot be used as a filter")
 
     if isinstance(node, ReactiveNodeFragment):
@@ -175,4 +183,4 @@ def atomify(
                 alog=alog,
             )
 
-    raise NotImplementedError(f"Atom for {node} is not implemented")
+    raise NotImplementedError(f"Atom for {node} {type(node)} is not implemented")
