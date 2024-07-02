@@ -1,11 +1,11 @@
 from typing import Protocol, runtime_checkable
-from rekuest.postmans.utils import RPCContract, arkiuse, mockuse, actoruse
+from rekuest_next.postmans.utils import RPCContract, arkiuse, mockuse, actoruse
 from fluss_next.api.schema import (
     RekuestNodeFragmentBase,
 )
-from rekuest.api.schema import afind, ReserveBindsInput, amytemplatefor, NodeScope
-from rekuest.postmans.vars import get_current_postman
-from rekuest.actors.base import Actor
+from rekuest_next.api.schema import afind, BindsInput
+from rekuest_next.postmans.vars import get_current_postman
+from rekuest_next.actors.base import Actor
 
 
 @runtime_checkable
@@ -33,13 +33,8 @@ async def arkicontractor(node: RekuestNodeFragmentBase, actor: Actor) -> RPCCont
         )
     except Exception as e:
         arkinode = await afind(hash=node.hash)
-        assert (
-            arkinode.scope == NodeScope.GLOBAL
-        ), "Non GlobalNodes that are not implemented on this agent cannot be put into a workflow"
         return arkiuse(
-            binds=ReserveBindsInput(
-                clients=node.binds.clients, templates=node.binds.templates
-            )
+            binds=BindsInput(clients=node.binds.clients, templates=node.binds.templates)
             if node.binds
             else None,
             hash=node.hash,

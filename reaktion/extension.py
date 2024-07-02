@@ -17,6 +17,7 @@ from rekuest_next.api.schema import (
     NodeKind,
     acreate_template,
     afind,
+    TemplateInput,
 )
 from fakts.fakts import Fakts
 from fluss_next.api.schema import (
@@ -43,6 +44,9 @@ class ReaktionExtension(BaseModel):
     )
     definition_registry: DefinitionRegistry = Field(default_factory=DefinitionRegistry)
     extension_name: str = "reaktion"
+
+    async def should_cleanup_on_init(self):
+        return False
 
     async def aspawn_actor_from_template(
         self,
@@ -93,7 +97,12 @@ class ReaktionExtension(BaseModel):
 
         self.definition_registry.register_at_interface(
             "deploy_graph",
-            definition=definition,
+            template=TemplateInput(
+                definition=definition,
+                dependencies=[],
+                interface="deploy_graph",
+                dynamic=False,
+            ),
             structure_registry=self.structure_registry,
             actorBuilder=actorBuilder,
         )
@@ -106,7 +115,12 @@ class ReaktionExtension(BaseModel):
 
         self.definition_registry.register_at_interface(
             "undeploy_graph",
-            definition=definition,
+            template=TemplateInput(
+                definition=definition,
+                dependencies=[],
+                interface="undeploy_graph",
+                dynamic=False,
+            ),
             structure_registry=self.structure_registry,
             actorBuilder=actorBuilder,
         )
