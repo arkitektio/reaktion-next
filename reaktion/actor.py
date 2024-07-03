@@ -87,31 +87,33 @@ class FlowActor(Actor):
         collector: AssignationCollector,
         transport: AssignTransport,
     ):
-        rekuest_nodes = [
-            x for x in self.flow.graph.nodes if isinstance(x, RekuestNodeFragmentBase)
-        ]
-
-        rekuest_contracts = {
-            node.id: await self.arkitekt_contractor(node, self)
-            for node in rekuest_nodes
-        }
-
-        self.contracts = {**rekuest_contracts}
-        futures = [contract.aenter() for contract in self.contracts.values()]
-        await asyncio.gather(*futures)
-
-        run = await self.run_mutation(
-            assignation=assignment.assignation,
-            flow=self.flow,
-            snapshot_interval=self.snapshot_interval,
-        )
-        print(self.is_generator)
-
-        t = 0
-        state = {}
-        await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
-
         try:
+            rekuest_nodes = [
+                x
+                for x in self.flow.graph.nodes
+                if isinstance(x, RekuestNodeFragmentBase)
+            ]
+
+            rekuest_contracts = {
+                node.id: await self.arkitekt_contractor(node, self)
+                for node in rekuest_nodes
+            }
+
+            self.contracts = {**rekuest_contracts}
+            futures = [contract.aenter() for contract in self.contracts.values()]
+            await asyncio.gather(*futures)
+
+            run = await self.run_mutation(
+                assignation=assignment.assignation,
+                flow=self.flow,
+                snapshot_interval=self.snapshot_interval,
+            )
+            print(self.is_generator)
+
+            t = 0
+            state = {}
+            await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
+
             event_queue = asyncio.Queue()
 
             atomtransport = AtomTransport(queue=event_queue)
@@ -142,19 +144,17 @@ class FlowActor(Actor):
             globalMap: Dict[str, Dict[str, Any]] = {}
             streamMap: Dict[str, Any] = {}
 
-            assert len(self.definition.args) == len(
-                assignment.args
-            ), "Wrong number of args"
-
-            for port, arg in zip(self.definition.args, assignment.args):
+            for port in self.definition.args:
                 if port.key in stream_keys:
-                    streamMap[port.key] = arg
+                    streamMap[port.key] = assignment.args[port.key]
                 if port.key in global_keys:
                     for i in self.flow.graph.globals:
                         if i.port.key == port.key:
                             for map in i.to_keys:
                                 nodeid, key = map.split(".")
-                                globalMap.setdefault(nodeid, {})[key] = arg
+                                globalMap.setdefault(nodeid, {})[key] = assignment.args[
+                                    port.key
+                                ]
 
             atoms = {
                 x.id: self.atomifier(
@@ -227,9 +227,11 @@ class FlowActor(Actor):
             while not complete:
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
+                print(event)
 
                 if event.type == EventType.ERROR:
-                    raise event.value
+                    # raise event.value
+                    pass
 
                 """ track = await self.track_mutation(
                     run=run,
@@ -318,6 +320,7 @@ class FlowActor(Actor):
             )
 
         except Exception as e:
+            print(e)
             logging.critical(f"Assignation {assignment} failed", exc_info=True)
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 

@@ -36,6 +36,18 @@ class Atom(BaseModel):
         except asyncio.QueueFull as e:
             logger.error(f"{self.node.id} private queue is full")
             raise AtomQueueFull(f"{self.node.id} private queue is full") from e
+        except Exception as e:
+            logger.error(f"{self.node.id} FAILED", exc_info=True)
+            print(f"{self.node.id} FAILED", e)
+            await self.transport.put(
+                OutEvent(
+                    handle="return_0",
+                    type=EventType.ERROR,
+                    source=self.node.id,
+                    value=e,
+                    caused_by=[-1],
+                )
+            )
 
     async def aenter(self):
         self._private_queue = asyncio.Queue()
