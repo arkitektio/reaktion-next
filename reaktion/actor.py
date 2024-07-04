@@ -49,7 +49,6 @@ class FlowActor(Actor):
     expand_inputs: bool = False
     shrink_outputs: bool = False
     provided = False
-    is_generator: bool = False
     arkitekt_contractor: NodeContractor = arkicontractor
     snapshot_interval: int = 40
     condition_snapshot_interval: int = 40
@@ -136,6 +135,8 @@ class FlowActor(Actor):
             stream_keys = []
             for i in stream:
                 stream_keys.append(i.key)
+
+            return_stream = returnNode.outs[0]
 
             global_keys = []
             for i in self.flow.graph.globals:
@@ -233,7 +234,8 @@ class FlowActor(Actor):
                     # raise event.value
                     pass
 
-                """ track = await self.track_mutation(
+                track = await self.track_mutation(
+                    reference=event.source + "_track_" + str(t),
                     run=run,
                     source=event.source,
                     handle=event.handle,
@@ -241,10 +243,10 @@ class FlowActor(Actor):
                     value=event.value
                     if event.value and not isinstance(event.value, Exception)
                     else str(event.value),
-                    type=event.type,
+                    kind=event.type,
                     t=t,
                 )
-                state[event.source] = track.id """
+                state[event.source] = track.id
 
                 # We tracked the events and proceed
 
@@ -266,9 +268,14 @@ class FlowActor(Actor):
 
                     if spawned_event.target == returnNode.id:
                         if spawned_event.type == EventType.NEXT:
+                            yield_dict = {}
+
+                            for port, value in zip(return_stream, spawned_event.value):
+                                yield_dict[port.key] = value
+
                             await transport.log_event(
                                 kind=AssignationEventKind.YIELD,
-                                returns=spawned_event.value,
+                                returns=yield_dict,
                             )
 
                         if spawned_event.type == EventType.ERROR:
@@ -281,8 +288,9 @@ class FlowActor(Actor):
                             await self.snapshot_mutation(
                                 run=run, events=list(state.values()), t=t
                             )
-                            await transport.change(
+                            await transport.log_event(
                                 kind=AssignationEventKind.DONE,
+                                message="Done ! :)",
                             )
 
                             logger.info("Done ! :)")

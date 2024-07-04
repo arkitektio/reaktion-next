@@ -27,18 +27,18 @@ class ArkitektMapAtom(MapAtom):
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
 
-        stream_one = self.node.instream[0]
+        stream_one = self.node.ins[0]
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
-        returns = await self.contract.aassign_retry(
-            kwargs=kwargs,
-            parent=self.assignment,
+        returns = await self.contract.acall_raw(
+            parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
+            **kwargs,
         )
 
         out = []
-        stream_one = self.node.outstream[0]
+        stream_one = self.node.outs[0]
         for arg in stream_one:
             out.append(returns[arg.key])
 
@@ -58,6 +58,8 @@ class ArkitektMergeMapAtom(MergeMapAtom):
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
+        print(kwargs, kwargs)
+
         async for r in self.contract.aiterate_raw(
             parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
@@ -65,7 +67,7 @@ class ArkitektMergeMapAtom(MergeMapAtom):
         ):
             print(r)
             out = []
-            stream_one = self.node.outstream[0]
+            stream_one = self.node.outs[0]
             for arg in stream_one:
                 out.append(r[arg.key])
 

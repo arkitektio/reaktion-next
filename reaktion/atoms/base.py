@@ -79,7 +79,7 @@ class Atom(BaseModel):
 
     @property
     def set_values(self) -> Dict[str, Any]:
-        defaults = getattr(self.node, "defaults", {}) or {}
+        defaults = self.node.constants_map or {}
         my_globals = self.globals or {}
         return {**defaults, **my_globals}
 
