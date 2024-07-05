@@ -1,7 +1,7 @@
 from typing import Any, List, Optional
-from rekuest.api.schema import AssignationLogLevel
-from rekuest.messages import Assignation
-from rekuest.postmans.utils import ReservationContract
+from rekuest_next.api.schema import AssignationLogLevel
+from rekuest_next.messages import Assignation
+from rekuest_next.postmans.utils import ReservationContract
 from fluss_next.api.schema import ArkitektNodeFragment
 from reaktion_next.atoms.generic import MapAtom
 from reaktion_next.events import Returns

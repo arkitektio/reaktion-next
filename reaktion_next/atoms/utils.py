@@ -1,5 +1,5 @@
 from typing import Awaitable, Callable, Dict
-from rekuest.messages import Assignation
+from rekuest_next.messages import Assign
 from fluss_next.api.schema import (
     RekuestFilterNodeFragment,
     RekuestMapNodeFragment,
@@ -27,10 +27,10 @@ from reaktion_next.atoms.transformation.filter import FilterAtom
 from reaktion_next.atoms.combination.withlatest import WithLatestAtom
 from reaktion_next.atoms.combination.gate import GateAtom
 from reaktion_next.atoms.filter.all import AllAtom
-from rekuest.postmans.utils import RPCContract
+from rekuest_next.postmans.utils import RPCContract
 from .base import Atom
 from .transport import AtomTransport
-from rekuest.actors.types import Assignment
+from rekuest_next.actors.types import Assignment
 from typing import Any, Optional
 from reaktion_next.atoms.operations.math import MathAtom, operation_map
 
@@ -41,7 +41,7 @@ def atomify(
     contract: Optional[RPCContract],
     globals: Dict[str, Any],
     assignment: Assignment,
-    alog: Callable[[Assignation, str, str], Awaitable[None]] = None,
+    alog: Callable[[Assign, str, str], Awaitable[None]] = None,
 ) -> Atom:
     if isinstance(node, RekuestMapNodeFragment):
         if node.node_kind == NodeKind.FUNCTION:

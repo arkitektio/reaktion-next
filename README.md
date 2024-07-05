@@ -1,11 +1,11 @@
 # reaktion
 
 [![codecov](https://codecov.io/gh/arkitektio/omero-ark/branch/master/graph/badge.svg?token=UGXEA2THBV)](https://codecov.io/gh/arkitektio/arkitektio)
-[![PyPI version](https://badge.fury.io/py/rekuest.svg)](https://pypi.org/project/rekuest/)
+[![PyPI version](https://badge.fury.io/py/rekuest_next.svg)](https://pypi.org/project/rekuest/)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://pypi.org/project/rekuest/)
 ![Maintainer](https://img.shields.io/badge/maintainer-jhnnsrs-blue)
-[![PyPI pyversions](https://img.shields.io/pypi/pyversions/rekuest.svg)](https://pypi.python.org/pypi/rekuest/)
-[![PyPI status](https://img.shields.io/pypi/status/rekuest.svg)](https://pypi.python.org/pypi/rekuest/)
+[![PyPI pyversions](https://img.shields.io/pypi/pyversions/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
+[![PyPI status](https://img.shields.io/pypi/status/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
 
 fluss workflow scheduler plugin for rekuest
 
@@ -22,5 +22,3 @@ workflow. This actor will keep track of the state of the workflow and acts as th
 
 reaktion is a rekuest plugin and requires the rekuest library. While we are trying to reduce
 the dependencies of rekuest, currently it makes only sense to use reaktion within the context of the arkitekt platform.
-
-

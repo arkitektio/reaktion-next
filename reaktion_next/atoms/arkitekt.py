@@ -1,7 +1,7 @@
 import asyncio
 
 from typing import Any, List, Optional
-from rekuest.postmans.utils import RPCContract
+from rekuest_next.postmans.utils import RPCContract
 from reaktion_next.atoms.helpers import node_to_reference
 
 from fluss_next.api.schema import RekuestMapNodeFragment

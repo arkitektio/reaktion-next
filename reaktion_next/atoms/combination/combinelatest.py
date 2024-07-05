@@ -1,6 +1,6 @@
 import asyncio
 from typing import List, Tuple, Optional
-from rekuest.api.schema import AssignationLogLevel
+from rekuest_next.api.schema import AssignationLogLevel
 from reaktion_next.atoms.combination.base import CombinationAtom
 from reaktion_next.events import EventType, OutEvent, InEvent
 import logging

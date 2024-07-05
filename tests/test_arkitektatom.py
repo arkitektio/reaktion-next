@@ -4,25 +4,24 @@ from fluss.api.schema import (
     FlowNodeFragmentBaseArkitektNode,
 )
 from .utils import expectnext
-from rekuest.messages import Provision, Assignation
-from rekuest.agents.transport.protocols.agent_json import *
-from rekuest.postmans.utils import mockuse
-from reaktion.atoms.arkitekt import (
+from rekuest_next.agents.transport.protocols.agent_json import *
+from rekuest_next.postmans.utils import mockuse
+from reaktion_next.atoms.arkitekt import (
     ArkitektMapAtom,
     ArkitektMergeMapAtom,
     ArkitektAsCompletedAtom,
     ArkitektOrderedAtom,
 )
 import asyncio
-from reaktion.events import InEvent, EventType
-from reaktion.atoms.transport import AtomTransport
-from rekuest.actors.base import Assignment
+from reaktion_next.events import InEvent, EventType
+from reaktion_next.atoms.transport import AtomTransport
+from rekuest_next.actors.base import Assignment
 
 
 def mock_stream(s):
     return "d"
 
-async def mockcontractor(node: ArkitektNodeFragment, provision: Provision):
+async def mockcontractor(node: ArkitektNodeFragment):
     return mockuse(
         returns=[mock_stream(streamitem) for streamitem in node.outstream[0]],
         reserve_sleep=0.1,

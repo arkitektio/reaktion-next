@@ -1,14 +1,13 @@
 import pytest
 from .utils import expectnext
-from rekuest.actors.base import Assignment
-from rekuest.agents.transport.protocols.agent_json import *
+from rekuest_next.actors.base import Assignment
 import asyncio
-from reaktion.events import InEvent, EventType
-from reaktion.atoms.transport import MockTransport
+from reaktion_next.events import InEvent, EventType
+from reaktion_next.atoms.transport import MockTransport
 from .conftest import (
     FlowNodeFragmentBaseReactiveNode,
 )
-from reaktion.atoms.transformation.chunk import ChunkAtom
+from reaktion_next.atoms.transformation.chunk import ChunkAtom
 
 
 @pytest.mark.asyncio

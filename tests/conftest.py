@@ -8,7 +8,7 @@ from fluss.api.schema import (
     StreamKind,
     MapStrategy,
 )
-from rekuest.api.schema import NodeKind
+from rekuest_next.api.schema import NodeKind
 import json
 import pytest
 from fluss.api.schema import FlowFragment, Scope, StreamItemChildFragment

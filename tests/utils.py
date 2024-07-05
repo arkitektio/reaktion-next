@@ -1,5 +1,5 @@
 import os
-from reaktion.events import EventType, OutEvent
+from reaktion_next.events import EventType, OutEvent
 
 DIR_NAME = os.path.dirname(os.path.realpath(__file__))
 

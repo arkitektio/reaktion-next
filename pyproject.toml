@@ -8,6 +8,8 @@ authors = ["jhnnsrs <jhnnsrs@gmail.com>"]
 python = " >=3.8,<4.0"
 rekuest = ">=0.2.29"
 fluss = ">=0.1.61"
+rekuest-next = "^0.2.2"
+fluss-next = "^0.1.61"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "^1.7.7"
