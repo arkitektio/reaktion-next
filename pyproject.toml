@@ -1,8 +1,10 @@
 [tool.poetry]
-name = "reaktion"
-version = "0.1.50"
+name = "reaktion-next"
+version = "0.1.57"
 description = ""
 authors = ["jhnnsrs <jhnnsrs@gmail.com>"]
+packages = [{ include = "reaktion_next" }]
+
 
 [tool.poetry.dependencies]
 python = " >=3.8,<4.0"
