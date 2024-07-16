@@ -12,6 +12,7 @@ from fluss_next.api.schema import (
     ReturnNodeFragment,
     acreate_run,
     asnapshot,
+    aclose_run,
     atrack,
 )
 from reaktion_next.atoms.transport import AtomTransport
@@ -61,6 +62,7 @@ class FlowActor(Actor):
     run_mutation: Callable = acreate_run
     snapshot_mutation: Callable = asnapshot
     track_mutation: Callable = atrack
+    close_mutation: Callable = aclose_run
 
     atomifier: Callable = atomify
     """ Atomifier is a function that takes a node and returns an atom """
@@ -309,11 +311,14 @@ class FlowActor(Actor):
             logging.info("Collecting...")
             await self.collector.collect(assignment.id)
             logging.info("Done ! :)")
+            await self.close_mutation(run=run.id)
 
         except asyncio.CancelledError:
             for task in tasks:
                 task.cancel()
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
+
+
 
             try:
                 await asyncio.wait_for(
@@ -321,6 +326,8 @@ class FlowActor(Actor):
                 )
             except asyncio.TimeoutError:
                 pass
+
+            await self.close_mutation(run=run.id)
 
             await self.collector.collect(assignment.id)
             await transport.log_event(
@@ -332,6 +339,7 @@ class FlowActor(Actor):
             logging.critical(f"Assignation {assignment} failed", exc_info=True)
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 
+            await self.close_mutation(run=run.id)
             await self.collector.collect(assignment.id)
             await transport.log_event(
                 kind=AssignationEventKind.CRITICAL,
