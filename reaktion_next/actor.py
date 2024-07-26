@@ -269,6 +269,19 @@ class FlowActor(Actor):
                     logger.info(f"-> {spawned_event}")
 
                     if spawned_event.target == returnNode.id:
+                        track = await self.track_mutation(
+                            reference=event.source + "_track_" + str(t),
+                            run=run,
+                            source=spawned_event.target,
+                            handle="return_0",
+                            caused_by=event.caused_by,
+                            value=spawned_event.value
+                            if spawned_event.value
+                            and not isinstance(spawned_event.value, Exception)
+                            else str(spawned_event.value),
+                            kind=spawned_event.type,
+                            t=t,
+                        )
                         if spawned_event.type == EventType.NEXT:
                             yield_dict = {}
 
@@ -281,9 +294,6 @@ class FlowActor(Actor):
                             )
 
                         if spawned_event.type == EventType.ERROR:
-                            await self.snapshot_mutation(
-                                run=run, events=list(state.values()), t=t
-                            )
                             raise spawned_event.value
 
                         if spawned_event.type == EventType.COMPLETE:
@@ -318,8 +328,6 @@ class FlowActor(Actor):
                 task.cancel()
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 
-
-
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*tasks, return_exceptions=True), timeout=4
@@ -340,6 +348,7 @@ class FlowActor(Actor):
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 
             await self.close_mutation(run=run.id)
+            print("Closing run")
             await self.collector.collect(assignment.id)
             await transport.log_event(
                 kind=AssignationEventKind.CRITICAL,
