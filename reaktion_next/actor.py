@@ -242,9 +242,11 @@ class FlowActor(Actor):
                     source=event.source,
                     handle=event.handle,
                     caused_by=event.caused_by,
-                    value=event.value
-                    if event.value and not isinstance(event.value, Exception)
-                    else str(event.value),
+                    value=(
+                        event.value
+                        if event.value and not isinstance(event.value, Exception)
+                        else str(event.value)
+                    ),
                     kind=event.type,
                     t=t,
                 )
@@ -275,10 +277,12 @@ class FlowActor(Actor):
                             source=spawned_event.target,
                             handle="return_0",
                             caused_by=event.caused_by,
-                            value=spawned_event.value
-                            if spawned_event.value
-                            and not isinstance(spawned_event.value, Exception)
-                            else str(spawned_event.value),
+                            value=(
+                                spawned_event.value
+                                if spawned_event.value
+                                and not isinstance(spawned_event.value, Exception)
+                                else str(spawned_event.value)
+                            ),
                             kind=spawned_event.type,
                             t=t,
                         )

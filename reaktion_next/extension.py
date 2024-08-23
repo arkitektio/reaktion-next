@@ -45,6 +45,9 @@ class ReaktionExtension(BaseModel):
     definition_registry: DefinitionRegistry = Field(default_factory=DefinitionRegistry)
     extension_name: str = "reaktion"
 
+    async def astart(self, instance_id):
+        pass
+
     async def should_cleanup_on_init(self):
         return False
 
