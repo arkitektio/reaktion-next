@@ -76,3 +76,6 @@ class ReaktionExtension(BaseModel):
 
     async def aretrieve_registry(self):
         return self.definition_registry
+
+    async def atear_down(self):
+        pass
