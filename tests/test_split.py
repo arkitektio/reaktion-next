@@ -1,7 +1,7 @@
 import asyncio
 
 import pytest
-from rekuest_next.actors.base import Assignment
+from rekuest_next_next.actors.base import Assignment
 
 from reaktion_next.atoms.transformation.split import SplitAtom
 from reaktion_next.atoms.transport import MockTransport

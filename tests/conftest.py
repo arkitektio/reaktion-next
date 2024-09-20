@@ -8,10 +8,10 @@ from fluss.api.schema import (
     StreamKind,
     MapStrategy,
 )
-from rekuest_next.api.schema import NodeKind
+from rekuest_next_next.api.schema import NodeKind
 import json
 import pytest
-from fluss.api.schema import FlowFragment, Scope, StreamItemChildFragment
+from fluss.api.schema import FlowFragment, PortScope, StreamItemChildFragment
 from .utils import build_relative
 
 
@@ -44,14 +44,14 @@ def arkitekt_generator_node():
         instream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
@@ -79,14 +79,14 @@ def arkitekt_functional_node():
         instream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
@@ -104,19 +104,19 @@ def reactive_zip_node():
         instream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
         ],
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
@@ -134,19 +134,19 @@ def reactive_withlatest_node():
         instream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
         ],
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
@@ -167,9 +167,9 @@ def reactive_chunk_node_with_defaults():
                     key=1,
                     kind=StreamKind.LIST,
                     nullable=False,
-                    scope=Scope.GLOBAL,
+                    scope=PortScope.GLOBAL,
                     child=StreamItemFragment(
-                        key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                        key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                     ),
                 )
             ]
@@ -177,7 +177,7 @@ def reactive_chunk_node_with_defaults():
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
@@ -195,14 +195,14 @@ def reactive_chunk_node():
         instream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ]
         ],
@@ -220,30 +220,30 @@ def reactive_split_node():
         instream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=True, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=True, scope=PortScope.GLOBAL
                 ),
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=True, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=True, scope=PortScope.GLOBAL
                 ),
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=True, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=True, scope=PortScope.GLOBAL
                 ),
             ]
         ],
         outstream=[
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
             [
                 StreamItemFragment(
-                    key=1, kind=StreamKind.INT, nullable=False, scope=Scope.GLOBAL
+                    key=1, kind=StreamKind.INT, nullable=False, scope=PortScope.GLOBAL
                 )
             ],
         ],

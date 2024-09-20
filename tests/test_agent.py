@@ -6,11 +6,11 @@ from fluss.api.schema import (
     SnapshotMutationSnapshot,
     TrackMutationTrack,
 )
-from rekuest_next.messages import Provision, Assignation
-from rekuest_next.agents.transport.protocols.agent_json import *
+from rekuest_next_next.messages import Provision, Assignation
+from rekuest_next_next.agents.transport.protocols.agent_json import *
 from reaktion_next.actor import FlowActor
-from rekuest_next.agents.transport.mock import MockAgentTransport
-from rekuest_next.postmans.utils import mockuse
+from rekuest_next_next.agents.transport.mock import MockAgentTransport
+from rekuest_next_next.postmans.utils import mockuse
 
 
 async def add_three_flow_contractor(node: ArkitektNodeFragment, provision: Provision):

@@ -4,8 +4,8 @@ from fluss.api.schema import (
     FlowNodeFragmentBaseArkitektNode,
 )
 from .utils import expectnext
-from rekuest_next.agents.transport.protocols.agent_json import *
-from rekuest_next.postmans.utils import mockuse
+from rekuest_next_next.agents.transport.protocols.agent_json import *
+from rekuest_next_next.postmans.utils import mockuse
 from reaktion_next.atoms.arkitekt import (
     ArkitektMapAtom,
     ArkitektMergeMapAtom,
@@ -15,7 +15,7 @@ from reaktion_next.atoms.arkitekt import (
 import asyncio
 from reaktion_next.events import InEvent, EventType
 from reaktion_next.atoms.transport import AtomTransport
-from rekuest_next.actors.base import Assignment
+from rekuest_next_next.actors.base import Assignment
 
 
 def mock_stream(s):

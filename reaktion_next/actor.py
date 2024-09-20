@@ -49,7 +49,7 @@ class FlowActor(Actor):
     contracts: Dict[str, RPCContract] = Field(default_factory=dict)
     expand_inputs: bool = False
     shrink_outputs: bool = False
-    provided = False
+    provided: bool = False
     arkitekt_contractor: NodeContractor = arkicontractor
     snapshot_interval: int = 40
     condition_snapshot_interval: int = 40
@@ -74,7 +74,6 @@ class FlowActor(Actor):
 
     reservation_state: Dict[str, ReservationFragment] = Field(default_factory=dict)
     _lock: Optional[asyncio.Lock] = None
-    _condition = None
 
     async def on_provide(self, passport: Passport):
         self._lock = asyncio.Lock()
@@ -109,7 +108,6 @@ class FlowActor(Actor):
                 flow=self.flow,
                 snapshot_interval=self.snapshot_interval,
             )
-            print(self.is_generator)
 
             t = 0
             state = {}
@@ -230,7 +228,6 @@ class FlowActor(Actor):
             while not complete:
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
-                print(event)
 
                 if event.type == EventType.ERROR:
                     # raise event.value
@@ -347,12 +344,10 @@ class FlowActor(Actor):
             )
 
         except Exception as e:
-            print(e)
             logging.critical(f"Assignation {assignment} failed", exc_info=True)
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 
             await self.close_mutation(run=run.id)
-            print("Closing run")
             await self.collector.collect(assignment.id)
             await transport.log_event(
                 kind=AssignationEventKind.CRITICAL,

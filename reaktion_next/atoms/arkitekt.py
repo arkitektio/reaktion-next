@@ -51,21 +51,18 @@ class ArkitektMergeMapAtom(MergeMapAtom):
     contract: ReservationContext
 
     async def merge_map(self, event: InEvent) -> Optional[List[Any]]:
-        print("merge_map", event)
         kwargs = self.set_values
 
         stream_one = self.node.ins[0]
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
-        print(kwargs, kwargs)
 
         async for r in self.contract.aiterate_raw(
             parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
             **kwargs,
         ):
-            print(r)
             out = []
             stream_one = self.node.outs[0]
             for arg in stream_one:

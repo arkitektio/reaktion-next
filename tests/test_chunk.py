@@ -1,6 +1,6 @@
 import pytest
 from .utils import expectnext
-from rekuest_next.actors.base import Assignment
+from rekuest_next_next.actors.base import Assignment
 import asyncio
 from reaktion_next.events import InEvent, EventType
 from reaktion_next.atoms.transport import MockTransport

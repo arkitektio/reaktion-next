@@ -153,7 +153,6 @@ class MergeMapAtom(Atom):
         try:
             while True:
                 event = await self.get()
-                print(event)
 
                 if event.type == EventType.NEXT:
                     try:

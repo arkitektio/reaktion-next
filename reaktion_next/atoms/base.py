@@ -38,7 +38,6 @@ class Atom(BaseModel):
             raise AtomQueueFull(f"{self.node.id} private queue is full") from e
         except Exception as e:
             logger.error(f"{self.node.id} FAILED", exc_info=True)
-            print(f"{self.node.id} FAILED", e)
             await self.transport.put(
                 OutEvent(
                     handle="return_0",
@@ -85,4 +84,3 @@ class Atom(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-        underscore_attrs_are_private = True
