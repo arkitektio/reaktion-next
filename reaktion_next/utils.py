@@ -27,6 +27,7 @@ def connected_events(graph: GraphFragment, event: OutEvent, t: int) -> List[InEv
                         handle=edge.target_handle,
                         type=event.type,
                         value=event.value,
+                        exception=event.exception,
                         current_t=t,
                     )
                 )

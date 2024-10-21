@@ -1,5 +1,6 @@
 import asyncio
-from typing import List, Tuple, Optional
+from typing import List, Optional, Deque
+from collections import deque
 from reaktion_next.atoms.combination.base import CombinationAtom
 from reaktion_next.events import EventType, OutEvent, InEvent
 import logging
@@ -13,21 +14,28 @@ logger = logging.getLogger(__name__)
 class ZipAtom(CombinationAtom):
     state: List[Optional[InEvent]] = Field(default_factory=lambda: [None, None])
     complete: List[Optional[InEvent]] = Field(default_factory=lambda: [None, None])
+    buffer: List[Deque[InEvent]] = Field(
+        default_factory=lambda: [deque(), deque()]
+    )  # Buffers for each input
 
     async def run(self):
-        self.state = list(map(lambda x: None, self.node.instream))
-        self.complete = list(map(lambda x: None, self.node.instream))
+        self.state = list(map(lambda x: None, self.node.ins))
+        self.complete = list(map(lambda x: None, self.node.ins))
+        self.buffer = list(
+            map(lambda x: deque(), self.node.ins)
+        )  # Initialize the buffers
 
         try:
             while True:
                 event = await self.get()
+                print("ZipAtom", event)
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )
@@ -48,8 +56,16 @@ class ZipAtom(CombinationAtom):
                         break
 
                 if event.type == EventType.NEXT:
-                    self.state[index_for_handle(event.handle)] = event
-                    if all(map(lambda x: x is not None, self.state)):
+                    idx = index_for_handle(event.handle)
+                    self.buffer[idx].append(
+                        event
+                    )  # Add the event to the buffer for that input
+
+                    # Check if all buffers have at least one item
+                    if all(map(lambda x: len(x) > 0, self.buffer)):
+                        # If so, pop from each buffer and zip the events
+                        self.state = [buffer.popleft() for buffer in self.buffer]
+                        print("ZipAtom ----->", self.state)
                         await self.transport.put(
                             OutEvent(
                                 handle="return_0",
@@ -61,8 +77,7 @@ class ZipAtom(CombinationAtom):
                                 caused_by=map(lambda x: x.current_t, self.state),
                             )
                         )
-                        # Reinitalizing
-                        self.state = list(map(lambda x: None, self.node.instream))
+                        # No need to reinitialize self.state as we're using buffers now
 
         except asyncio.CancelledError as e:
             logger.warning(f"Atom {self.node} is getting cancelled")

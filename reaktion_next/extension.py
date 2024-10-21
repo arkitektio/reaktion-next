@@ -4,7 +4,7 @@ from rekuest_next.actors.reactive.api import useInstanceID
 import logging
 from rekuest_next.register import register_func
 from rekuest_next.actors.base import Actor
-from rekuest_next.actors.types import Passport, Assignment
+from rekuest_next.actors.types import Passport
 from fluss_next.api.schema import RekuestNodeFragmentBase, aget_flow
 from rekuest_next.api.schema import NodeKind
 
@@ -13,7 +13,7 @@ from rekuest_next.api.schema import (
     PortInput,
     DependencyInput,
     DefinitionInput,
-    TemplateFragment,
+    Template,
     NodeKind,
     acreate_template,
     afind,
@@ -53,7 +53,7 @@ class ReaktionExtension(BaseModel):
 
     async def aspawn_actor_from_template(
         self,
-        template: TemplateFragment,
+        template: Template,
         passport: Passport,
         transport: ActorTransport,
         agent: "BaseAgent",

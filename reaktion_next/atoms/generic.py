@@ -109,7 +109,7 @@ class MapAtom(Atom):
                                 handle="return_0",
                                 type=EventType.ERROR,
                                 source=self.node.id,
-                                value=e,
+                                exception=e,
                                 caused_by=[event.current_t],
                             )
                         )
@@ -132,7 +132,7 @@ class MapAtom(Atom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )
@@ -180,7 +180,7 @@ class MergeMapAtom(Atom):
                                 handle="return_0",
                                 type=EventType.ERROR,
                                 source=self.node.id,
-                                value=e,
+                                exception=e,
                                 caused_by=[event.current_t],
                             )
                         )
@@ -203,7 +203,7 @@ class MergeMapAtom(Atom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )
@@ -233,7 +233,7 @@ class OrderedAtom(Atom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=exception,
+                            exception=exception,
                             source=self.node.id,
                             caused_by=[key],
                         )
@@ -312,7 +312,7 @@ class OrderedAtom(Atom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )
@@ -348,7 +348,7 @@ class AsCompletedAtom(Atom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=exception,
+                            exception=exception,
                             source=self.node.id,
                             caused_by=[key],
                         )
@@ -423,7 +423,7 @@ class AsCompletedAtom(Atom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )

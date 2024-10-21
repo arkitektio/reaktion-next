@@ -25,14 +25,16 @@ from reaktion_next.utils import connected_events
 from rekuest_next.actors.base import Actor
 from rekuest_next.api.schema import (
     AssignationEventKind,
-    ReservationFragment,
-    NodeFragment,
+    Reservation,
+    Node,
 )
-from rekuest_next.postmans.utils import RPCContract, ContractStatus
+from rekuest_next.postmans.contract import RPCContract
+
 from typing import Any
 from rekuest_next.collection.collector import AssignationCollector
 from rekuest_next.actors.transport.types import AssignTransport
-from rekuest_next.actors.types import Assignment, Passport
+from rekuest_next.actors.types import Passport
+from rekuest_next.messages import Assign
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +44,7 @@ class NodeState(BaseModel):
 
 
 class FlowActor(Actor):
-    definition: NodeFragment
+    definition: Node
     is_generator: bool = False
     flow: FlowFragment
     agent: Any
@@ -53,7 +55,6 @@ class FlowActor(Actor):
     arkitekt_contractor: NodeContractor = arkicontractor
     snapshot_interval: int = 40
     condition_snapshot_interval: int = 40
-    contract_states: Dict[str, ContractStatus] = Field(default_factory=dict)
     contract_t: int = 0
 
     # Functionality for running the flow
@@ -72,7 +73,7 @@ class FlowActor(Actor):
         Dict[str, NodeState],
     ] = Field(default_factory=dict)
 
-    reservation_state: Dict[str, ReservationFragment] = Field(default_factory=dict)
+    reservation_state: Dict[str, Reservation] = Field(default_factory=dict)
     _lock: Optional[asyncio.Lock] = None
 
     async def on_provide(self, passport: Passport):
@@ -83,11 +84,23 @@ class FlowActor(Actor):
 
     async def on_assign(
         self,
-        assignment: Assignment,
+        assignment: Assign,
         collector: AssignationCollector,
         transport: AssignTransport,
     ):
+
+        run = await self.run_mutation(
+            assignation=assignment.assignation,
+            flow=self.flow,
+            snapshot_interval=self.snapshot_interval,
+        )
+
+        t = 0
+        state = {}
+        tasks = []
+
         try:
+
             rekuest_nodes = [
                 x
                 for x in self.flow.graph.nodes
@@ -103,14 +116,6 @@ class FlowActor(Actor):
             futures = [contract.aenter() for contract in self.contracts.values()]
             await asyncio.gather(*futures)
 
-            run = await self.run_mutation(
-                assignation=assignment.assignation,
-                flow=self.flow,
-                snapshot_interval=self.snapshot_interval,
-            )
-
-            t = 0
-            state = {}
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 
             event_queue = asyncio.Queue()
@@ -138,24 +143,39 @@ class FlowActor(Actor):
 
             return_stream = returnNode.outs[0]
 
-            global_keys = []
-            for i in self.flow.graph.globals:
-                global_keys.append(i.port.key)
 
             globalMap: Dict[str, Dict[str, Any]] = {}
             streamMap: Dict[str, Any] = {}
 
+
+            # We need to map the global keys to the actual values from the kwargs
+            # Each node has a globals_map that maps the port key to the global key
+            # So we need to map the global key to the actual value from the kwargs
+
+            global_keys = []
+            for i in self.flow.graph.globals:
+                global_keys.append(i.port.key)
+
+            for node in participatingNodes:
+                for port_key, global_key in node.globals_map.items():
+                    if global_key not in global_keys:
+                       raise ValueError(f"Global key {global_key} not found in globals")
+                    if node.id not in globalMap:
+                        globalMap[node.id] = {}
+
+                    globalMap[node.id][port_key] = assignment.args[global_key]
+
+
+            # Print the global Map for debugging
+            print(globalMap)
+
+
+            # We need to map the stream keys to the actual values from the kwargs
+            # Args nodes have a stream that maps the port key to the stream key
+            
             for port in self.definition.args:
                 if port.key in stream_keys:
                     streamMap[port.key] = assignment.args[port.key]
-                if port.key in global_keys:
-                    for i in self.flow.graph.globals:
-                        if i.port.key == port.key:
-                            for map in i.to_keys:
-                                nodeid, key = map.split(".")
-                                globalMap.setdefault(nodeid, {})[key] = assignment.args[
-                                    port.key
-                                ]
 
             atoms = {
                 x.id: self.atomifier(
@@ -194,12 +214,27 @@ class FlowActor(Actor):
             await event_queue.put(initial_done_event)
 
             edge_targets = [e.target for e in self.flow.graph.edges]
+
+            # Get all nodes that have no instream
             nodes_without_instream = [
                 x
                 for x in participatingNodes
                 if len(x.ins[0]) == 0 and x.id not in edge_targets
             ]
 
+            # Get all nodes that are connected to argNode
+            connected_arg_nodes = [
+                e.target for e in self.flow.graph.edges if e.source == argNode.id
+            ]
+
+            # Get the nodes that are not connected to argNode AND have no instream
+            nodes_without_instream = [
+                node
+                for node in nodes_without_instream
+                if node.id not in connected_arg_nodes
+            ]
+
+            # Send initial events to nodes without instream (they are not connected to argNode so need to be triggered)
             for node in nodes_without_instream:
                 assert node.id in atoms, "Atom not found. Should not happen."
                 atom = atoms[node.id]
@@ -231,7 +266,10 @@ class FlowActor(Actor):
 
                 if event.type == EventType.ERROR:
                     # raise event.value
+                    print(event)
                     pass
+
+                print(event)
 
                 track = await self.track_mutation(
                     reference=event.source + "_track_" + str(t),
@@ -239,11 +277,8 @@ class FlowActor(Actor):
                     source=event.source,
                     handle=event.handle,
                     caused_by=event.caused_by,
-                    value=(
-                        event.value
-                        if event.value and not isinstance(event.value, Exception)
-                        else str(event.value)
-                    ),
+                    value=event.value,
+                    exception=str(event.exception) if event.exception else None,
                     kind=event.type,
                     t=t,
                 )
@@ -274,11 +309,11 @@ class FlowActor(Actor):
                             source=spawned_event.target,
                             handle="return_0",
                             caused_by=event.caused_by,
-                            value=(
-                                spawned_event.value
-                                if spawned_event.value
-                                and not isinstance(spawned_event.value, Exception)
-                                else str(spawned_event.value)
+                            value=spawned_event.value,
+                            exception=(
+                                str(spawned_event.exception)
+                                if spawned_event.exception
+                                else None
                             ),
                             kind=spawned_event.type,
                             t=t,
@@ -295,7 +330,7 @@ class FlowActor(Actor):
                             )
 
                         if spawned_event.type == EventType.ERROR:
-                            raise spawned_event.value
+                            raise spawned_event.exception
 
                         if spawned_event.type == EventType.COMPLETE:
                             await self.snapshot_mutation(

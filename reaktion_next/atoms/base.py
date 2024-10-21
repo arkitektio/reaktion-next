@@ -5,7 +5,7 @@ from fluss_next.api.schema import BaseGraphNodeFragmentBase
 from reaktion_next.atoms.errors import AtomQueueFull
 from reaktion_next.events import EventType, InEvent, OutEvent
 import logging
-from rekuest_next.actors.types import Assignment
+from rekuest_next.messages import Assign
 from reaktion_next.atoms.transport import AtomTransport
 from typing import Dict, Any
 
@@ -17,7 +17,7 @@ class Atom(BaseModel):
     transport: AtomTransport
     alog: Optional[Callable[[str, str, str], Awaitable[None]]] = Field(exclude=True)
     globals: Dict[str, Any] = Field(default_factory=dict)
-    assignment: Assignment
+    assignment: Assign
 
     _private_queue: asyncio.Queue = None
 
@@ -43,7 +43,7 @@ class Atom(BaseModel):
                     handle="return_0",
                     type=EventType.ERROR,
                     source=self.node.id,
-                    value=e,
+                    exception=e,
                     caused_by=[-1],
                 )
             )
@@ -71,7 +71,7 @@ class Atom(BaseModel):
                     handle="return_0",
                     type=EventType.ERROR,
                     source=self.node.id,
-                    value=e,
+                    exception=e,
                     caused_by=[-1],
                 )
             )

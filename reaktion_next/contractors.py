@@ -1,5 +1,6 @@
 from typing import Protocol, runtime_checkable
-from rekuest_next.postmans.utils import RPCContract, arkiuse, mockuse, actoruse
+from rekuest_next.postmans.contract import RPCContract
+from rekuest_next.postmans.utils import localuse
 from fluss_next.api.schema import (
     RekuestNodeFragmentBase,
 )
@@ -17,7 +18,20 @@ class NodeContractor(Protocol):
 
 
 async def arkicontractor(node: RekuestNodeFragmentBase, actor: Actor) -> RPCContract:
+    """A contractor that can either spawn local, actors
+    of use remote actors to perform the task
+
+
+    """
+
+    localtemplate = await actor.agent.afind_local_template_for_nodehash(node.hash)
+
+    if localtemplate:
+        print("We are in luck. We found a local template")
+        return localuse(template=localtemplate, supervisor=actor, reference=node.id)
+
     arkinode = await afind(hash=node.hash)
+
     return reserved(node=arkinode, reference=node.id)
 
 

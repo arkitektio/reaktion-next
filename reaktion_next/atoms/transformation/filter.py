@@ -22,7 +22,7 @@ class FilterAtom(CombinationAtom):
                             OutEvent(
                                 handle=f"return_{index}",
                                 type=EventType.ERROR,
-                                value=event.value,
+                                exception=event.exception,
                                 source=self.node.id,
                                 caused_by=[event.current_t],
                             )

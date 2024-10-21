@@ -24,7 +24,7 @@ class ChunkAtom(CombinationAtom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )

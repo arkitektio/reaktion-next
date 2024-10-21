@@ -1,9 +1,8 @@
 import asyncio
 
 from typing import Any, List, Optional
-from rekuest_next.postmans.utils import RPCContract
 from reaktion_next.atoms.helpers import node_to_reference
-
+from rekuest_next.postmans.contract import RPCContract
 from fluss_next.api.schema import RekuestMapNodeFragment
 
 from reaktion_next.atoms.generic import (
@@ -22,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 class ArkitektMapAtom(MapAtom):
     node: RekuestMapNodeFragment
-    contract: ReservationContext
+    contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
@@ -32,9 +31,9 @@ class ArkitektMapAtom(MapAtom):
             kwargs[item.key] = arg
 
         returns = await self.contract.acall_raw(
-            parent=self.assignment.assignation,
+            parent=self.assignment,
             reference=node_to_reference(self.node, event),
-            **kwargs,
+            kwargs=kwargs,
         )
 
         out = []
@@ -48,7 +47,7 @@ class ArkitektMapAtom(MapAtom):
 
 class ArkitektMergeMapAtom(MergeMapAtom):
     node: RekuestMapNodeFragment
-    contract: ReservationContext
+    contract: RPCContract
 
     async def merge_map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
@@ -57,11 +56,10 @@ class ArkitektMergeMapAtom(MergeMapAtom):
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
-
         async for r in self.contract.aiterate_raw(
-            parent=self.assignment.assignation,
+            parent=self.assignment,
             reference=node_to_reference(self.node, event),
-            **kwargs,
+            kwargs=kwargs,
         ):
             out = []
             stream_one = self.node.outs[0]
@@ -73,7 +71,7 @@ class ArkitektMergeMapAtom(MergeMapAtom):
 
 class ArkitektAsCompletedAtom(AsCompletedAtom):
     node: RekuestMapNodeFragment
-    contract: ReservationContext
+    contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
@@ -82,7 +80,7 @@ class ArkitektAsCompletedAtom(AsCompletedAtom):
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
-        returns = await self.contract.aassign_retry(
+        returns = await self.contract.acall_raw(
             kwargs=kwargs,
             parent=self.assignment,
             reference=node_to_reference(self.node, event),
@@ -98,7 +96,7 @@ class ArkitektAsCompletedAtom(AsCompletedAtom):
 
 class ArkitektOrderedAtom(OrderedAtom):
     node: RekuestMapNodeFragment
-    contract: ReservationContext
+    contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
@@ -107,7 +105,7 @@ class ArkitektOrderedAtom(OrderedAtom):
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
-        returns = await self.contract.aassign_retry(
+        returns = await self.contract.acall_raw(
             kwargs=kwargs,
             parent=self.assignment,
             reference=node_to_reference(self.node, event),

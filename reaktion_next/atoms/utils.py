@@ -27,10 +27,10 @@ from reaktion_next.atoms.transformation.filter import FilterAtom
 from reaktion_next.atoms.combination.withlatest import WithLatestAtom
 from reaktion_next.atoms.combination.gate import GateAtom
 from reaktion_next.atoms.filter.all import AllAtom
-from rekuest_next.postmans.utils import RPCContract
+from rekuest_next.postmans.contract import RPCContract
 from .base import Atom
 from .transport import AtomTransport
-from rekuest_next.actors.types import Assignment
+from rekuest_next.messages import Assign
 from typing import Any, Optional
 from reaktion_next.atoms.operations.math import MathAtom, operation_map
 
@@ -40,7 +40,7 @@ def atomify(
     transport: AtomTransport,
     contract: Optional[RPCContract],
     globals: Dict[str, Any],
-    assignment: Assignment,
+    assignment: Assign,
     alog: Callable[[Assign, str, str], Awaitable[None]] = None,
 ) -> Atom:
     if isinstance(node, RekuestMapNodeFragment):
