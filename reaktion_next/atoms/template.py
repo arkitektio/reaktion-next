@@ -2,13 +2,13 @@ from typing import Any, List, Optional
 from rekuest_next.api.schema import AssignationLogLevel
 from rekuest_next.messages import Assignation
 from rekuest_next.postmans.utils import ReservationContract
-from fluss_next.api.schema import ArkitektNodeFragment
+from fluss_next.api.schema import ArkitektNode
 from reaktion_next.atoms.generic import MapAtom
 from reaktion_next.events import Returns
 
 
 class TemplateMapAtom(MapAtom):
-    node: ArkitektNodeFragment
+    node: ArkitektNode
     contract: ReservationContract
 
     async def map(self, args: Returns) -> Optional[List[Any]]:

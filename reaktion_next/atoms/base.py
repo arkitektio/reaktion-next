@@ -1,7 +1,7 @@
 import asyncio
 from typing import Awaitable, Callable, Optional
 from pydantic import BaseModel, Field
-from fluss_next.api.schema import BaseGraphNodeFragmentBase
+from fluss_next.api.schema import BaseGraphNodeBase
 from reaktion_next.atoms.errors import AtomQueueFull
 from reaktion_next.events import EventType, InEvent, OutEvent
 import logging
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class Atom(BaseModel):
-    node: BaseGraphNodeFragmentBase
+    node: BaseGraphNodeBase
     transport: AtomTransport
     alog: Optional[Callable[[str, str, str], Awaitable[None]]] = Field(exclude=True)
     globals: Dict[str, Any] = Field(default_factory=dict)

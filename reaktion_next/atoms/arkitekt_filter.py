@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 from rekuest_next.postmans.contract import RPCContract
 from reaktion_next.atoms.helpers import node_to_reference
 
-from fluss_next.api.schema import RekuestFilterNodeFragment
+from fluss_next.api.schema import RekuestFilterNode
 
 from reaktion_next.atoms.generic import (
     MapAtom,
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArkitektFilterAtom(FilterAtom):
-    node: RekuestFilterNodeFragment
+    node: RekuestFilterNode
     contract: RPCContract
 
     async def filter(self, event: InEvent) -> Optional[bool]:

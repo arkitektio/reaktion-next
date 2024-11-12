@@ -2,22 +2,22 @@ from typing import Protocol, runtime_checkable
 from rekuest_next.postmans.contract import RPCContract
 from rekuest_next.postmans.utils import localuse
 from fluss_next.api.schema import (
-    RekuestNodeFragmentBase,
+    RekuestNodeBase,
 )
 from rekuest_next.api.schema import afind, BindsInput
 from rekuest_next.postmans.vars import get_current_postman
 from rekuest_next.actors.base import Actor
-from rekuest_next.utils import reserved
+from rekuest_next.utils import reserved, direct
 
 
 @runtime_checkable
 class NodeContractor(Protocol):
     async def __call__(
-        self, node: RekuestNodeFragmentBase, actor: Actor
+        self, node: RekuestNodeBase, actor: Actor
     ) -> RPCContract: ...
 
 
-async def arkicontractor(node: RekuestNodeFragmentBase, actor: Actor) -> RPCContract:
+async def arkicontractor(node: RekuestNodeBase, actor: Actor) -> RPCContract:
     """A contractor that can either spawn local, actors
     of use remote actors to perform the task
 
@@ -32,11 +32,11 @@ async def arkicontractor(node: RekuestNodeFragmentBase, actor: Actor) -> RPCCont
 
     arkinode = await afind(hash=node.hash)
 
-    return reserved(node=arkinode, reference=node.id)
+    return direct(node=arkinode, reference=node.id)
 
 
 async def arkimockcontractor(
-    node: RekuestNodeFragmentBase, actor: Actor
+    node: RekuestNodeBase, actor: Actor
 ) -> RPCContract:
     return mockuse(
         node=node,

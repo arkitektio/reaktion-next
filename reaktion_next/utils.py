@@ -1,21 +1,21 @@
 from typing import List, Optional
 from rekuest_next.api.schema import DefinitionInput, PortInput, NodeKind
 from fluss_next.api.schema import (
-    GraphFragment,
-    RekuestNodeFragmentBase,
-    ReactiveNodeFragment,
+    Graph,
+    RekuestNodeBase,
+    ReactiveNode,
     ReactiveImplementation,
-    ArgNodeFragment,
-    ReturnNodeFragment,
-    GlobalArgFragment,
-    FlowFragment,
+    ArgNode,
+    ReturnNode,
+    GlobalArg,
+    Flow,
 )
 from .events import OutEvent, InEvent
 import pydantic
 from .errors import FlowLogicError
 
 
-def connected_events(graph: GraphFragment, event: OutEvent, t: int) -> List[InEvent]:
+def connected_events(graph: Graph, event: OutEvent, t: int) -> List[InEvent]:
     events = []
 
     for edge in graph.edges:
@@ -37,15 +37,15 @@ def connected_events(graph: GraphFragment, event: OutEvent, t: int) -> List[InEv
     return events
 
 
-def infer_kind_from_graph(graph: GraphFragment) -> NodeKind:
+def infer_kind_from_graph(graph: Graph) -> NodeKind:
     kind = NodeKind.FUNCTION
 
     for node in graph.nodes:
-        if isinstance(node, RekuestNodeFragmentBase):
+        if isinstance(node, RekuestNodeBase):
             if node.kind == NodeKind.GENERATOR:
                 kind = NodeKind.GENERATOR
                 break
-        if isinstance(node, ReactiveNodeFragment):
+        if isinstance(node, ReactiveNode):
             if node.implementation == ReactiveImplementation.CHUNK:
                 kind = NodeKind.GENERATOR
                 break
@@ -54,15 +54,15 @@ def infer_kind_from_graph(graph: GraphFragment) -> NodeKind:
 
 
 def convert_flow_to_definition(
-    flow: FlowFragment,
+    flow: Flow,
     name: str = None,
     description: str = None,
     kind: Optional[NodeKind] = None,
 ) -> DefinitionInput:
     # assert localnodes are in the definitionregistry
 
-    argNode = [x for x in flow.graph.nodes if isinstance(x, ArgNodeFragment)][0]
-    returnNode = [x for x in flow.graph.nodes if isinstance(x, ReturnNodeFragment)][0]
+    argNode = [x for x in flow.graph.nodes if isinstance(x, ArgNode)][0]
+    returnNode = [x for x in flow.graph.nodes if isinstance(x, ReturnNode)][0]
 
     args = [PortInput(**x.dict(by_alias=True)) for x in argNode.outs[0]]
     returns = [PortInput(**x.dict(by_alias=True)) for x in returnNode.ins[0]]

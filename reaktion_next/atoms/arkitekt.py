@@ -3,7 +3,7 @@ import asyncio
 from typing import Any, List, Optional
 from reaktion_next.atoms.helpers import node_to_reference
 from rekuest_next.postmans.contract import RPCContract
-from fluss_next.api.schema import RekuestMapNodeFragment
+from fluss_next.api.schema import RekuestMapNode
 
 from reaktion_next.atoms.generic import (
     MapAtom,
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 class ArkitektMapAtom(MapAtom):
-    node: RekuestMapNodeFragment
+    node: RekuestMapNode
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
@@ -46,7 +46,7 @@ class ArkitektMapAtom(MapAtom):
 
 
 class ArkitektMergeMapAtom(MergeMapAtom):
-    node: RekuestMapNodeFragment
+    node: RekuestMapNode
     contract: RPCContract
 
     async def merge_map(self, event: InEvent) -> Optional[List[Any]]:
@@ -70,7 +70,7 @@ class ArkitektMergeMapAtom(MergeMapAtom):
 
 
 class ArkitektAsCompletedAtom(AsCompletedAtom):
-    node: RekuestMapNodeFragment
+    node: RekuestMapNode
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
@@ -95,7 +95,7 @@ class ArkitektAsCompletedAtom(AsCompletedAtom):
 
 
 class ArkitektOrderedAtom(OrderedAtom):
-    node: RekuestMapNodeFragment
+    node: RekuestMapNode
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:

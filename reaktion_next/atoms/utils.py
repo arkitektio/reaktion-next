@@ -1,12 +1,10 @@
 from typing import Awaitable, Callable, Dict
 from rekuest_next.messages import Assign
 from fluss_next.api.schema import (
-    RekuestFilterNodeFragment,
-    RekuestMapNodeFragment,
-    GraphNodeFragmentBaseRekuestFilterNode,
-    GraphNodeFragmentBaseRekuestMapNode,
-    ReactiveNodeFragment,
-    BaseGraphNodeFragmentBase,
+    RekuestFilterNode,
+    RekuestMapNode,
+    ReactiveNode,
+    BaseGraphNodeBase,
     MapStrategy,
     ReactiveImplementation,
     NodeKind,
@@ -36,14 +34,14 @@ from reaktion_next.atoms.operations.math import MathAtom, operation_map
 
 
 def atomify(
-    node: BaseGraphNodeFragmentBase,
+    node: BaseGraphNodeBase,
     transport: AtomTransport,
     contract: Optional[RPCContract],
     globals: Dict[str, Any],
     assignment: Assign,
     alog: Callable[[Assign, str, str], Awaitable[None]] = None,
 ) -> Atom:
-    if isinstance(node, RekuestMapNodeFragment):
+    if isinstance(node, RekuestMapNode):
         if node.node_kind == NodeKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektMapAtom(
@@ -87,7 +85,7 @@ def atomify(
             )
 
         raise NotImplementedError(f"Node kind {node.kind} is not implemented")
-    if isinstance(node, RekuestFilterNodeFragment):
+    if isinstance(node, RekuestFilterNode):
         if node.node_kind == NodeKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektFilterAtom(
@@ -101,7 +99,7 @@ def atomify(
         if node.node_kind == NodeKind.GENERATOR:
             raise NotImplementedError("Generator cannot be used as a filter")
 
-    if isinstance(node, ReactiveNodeFragment):
+    if isinstance(node, ReactiveNode):
         if node.implementation == ReactiveImplementation.ZIP:
             return ZipAtom(
                 node=node,

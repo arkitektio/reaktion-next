@@ -4,12 +4,11 @@ import asyncio
 from pydantic import BaseModel, Field
 
 from fluss_next.api.schema import (
-    ArgNodeFragment,
-    RekuestNodeFragmentBase,
-    FlowFragment,
-    ReactiveNodeFragment,
-    RekuestFilterNodeFragment,
-    ReturnNodeFragment,
+    ArgNode,
+    RekuestNodeBase,
+    Flow,
+    ReactiveNode,
+    ReturnNode,
     acreate_run,
     asnapshot,
     aclose_run,
@@ -46,7 +45,7 @@ class NodeState(BaseModel):
 class FlowActor(Actor):
     definition: Node
     is_generator: bool = False
-    flow: FlowFragment
+    flow: Flow
     agent: Any
     contracts: Dict[str, RPCContract] = Field(default_factory=dict)
     expand_inputs: bool = False
@@ -104,7 +103,7 @@ class FlowActor(Actor):
             rekuest_nodes = [
                 x
                 for x in self.flow.graph.nodes
-                if isinstance(x, RekuestNodeFragmentBase)
+                if isinstance(x, RekuestNodeBase)
             ]
 
             rekuest_contracts = {
@@ -122,26 +121,33 @@ class FlowActor(Actor):
 
             atomtransport = AtomTransport(queue=event_queue)
 
+
+            print(self.flow.graph.nodes)
+
             argNode = [
-                x for x in self.flow.graph.nodes if isinstance(x, ArgNodeFragment)
+                x for x in self.flow.graph.nodes if isinstance(x, ArgNode)
             ][0]
             returnNode = [
-                x for x in self.flow.graph.nodes if isinstance(x, ReturnNodeFragment)
+                x for x in self.flow.graph.nodes if isinstance(x, ReturnNode)
             ][0]
 
             participatingNodes = [
                 x
                 for x in self.flow.graph.nodes
-                if isinstance(x, RekuestNodeFragmentBase)
-                or isinstance(x, ReactiveNodeFragment)
+                if isinstance(x, RekuestNodeBase)
+                or isinstance(x, ReactiveNode)
             ]
 
+                
+
+            # Return node has only one input stream the returns
+            return_stream = returnNode.ins[0]
+            # Arg node has only one output stream
             stream = argNode.outs[0]
             stream_keys = []
             for i in stream:
                 stream_keys.append(i.key)
 
-            return_stream = returnNode.outs[0]
 
 
             globalMap: Dict[str, Dict[str, Any]] = {}
@@ -318,12 +324,15 @@ class FlowActor(Actor):
                             kind=spawned_event.type,
                             t=t,
                         )
+
+                        print("Return event", spawned_event)
                         if spawned_event.type == EventType.NEXT:
                             yield_dict = {}
 
                             for port, value in zip(return_stream, spawned_event.value):
                                 yield_dict[port.key] = value
 
+                            print("Yield dict", yield_dict)
                             await transport.log_event(
                                 kind=AssignationEventKind.YIELD,
                                 returns=yield_dict,
@@ -340,6 +349,7 @@ class FlowActor(Actor):
                                 kind=AssignationEventKind.DONE,
                                 message="Done ! :)",
                             )
+                            complete = True
 
                             logger.info("Done ! :)")
 

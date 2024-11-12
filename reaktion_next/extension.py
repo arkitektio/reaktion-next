@@ -5,7 +5,7 @@ import logging
 from rekuest_next.register import register_func
 from rekuest_next.actors.base import Actor
 from rekuest_next.actors.types import Passport
-from fluss_next.api.schema import RekuestNodeFragmentBase, aget_flow
+from fluss_next.api.schema import RekuestNodeBase, aget_flow
 from rekuest_next.api.schema import NodeKind
 
 from typing import Optional
@@ -19,9 +19,9 @@ from rekuest_next.api.schema import (
     afind,
     TemplateInput,
 )
-from fakts.fakts import Fakts
+from fakts_next.fakts import Fakts
 from fluss_next.api.schema import (
-    FlowFragment,
+    Flow,
 )
 from reaktion_next.utils import infer_kind_from_graph
 from rekuest_next.widgets import StringWidget
