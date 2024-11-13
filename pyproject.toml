@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "reaktion-next"
-version = "0.1.79"
+version = "0.1.81"
 description = ""
 authors = ["jhnnsrs <jhnnsrs@gmail.com>"]
 packages = [{ include = "reaktion_next" }]
