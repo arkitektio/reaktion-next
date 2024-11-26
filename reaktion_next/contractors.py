@@ -27,7 +27,6 @@ async def arkicontractor(node: RekuestNodeBase, actor: Actor) -> RPCContract:
     localtemplate = await actor.agent.afind_local_template_for_nodehash(node.hash)
 
     if localtemplate:
-        print("We are in luck. We found a local template")
         return localuse(template=localtemplate, supervisor=actor, reference=node.id)
 
     arkinode = await afind(hash=node.hash)

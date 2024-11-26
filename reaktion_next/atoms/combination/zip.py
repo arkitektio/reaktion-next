@@ -28,7 +28,6 @@ class ZipAtom(CombinationAtom):
         try:
             while True:
                 event = await self.get()
-                print("ZipAtom", event)
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
@@ -65,7 +64,6 @@ class ZipAtom(CombinationAtom):
                     if all(map(lambda x: len(x) > 0, self.buffer)):
                         # If so, pop from each buffer and zip the events
                         self.state = [buffer.popleft() for buffer in self.buffer]
-                        print("ZipAtom ----->", self.state)
                         await self.transport.put(
                             OutEvent(
                                 handle="return_0",

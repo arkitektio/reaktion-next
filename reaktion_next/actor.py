@@ -122,7 +122,6 @@ class FlowActor(Actor):
             atomtransport = AtomTransport(queue=event_queue)
 
 
-            print(self.flow.graph.nodes)
 
             argNode = [
                 x for x in self.flow.graph.nodes if isinstance(x, ArgNode)
@@ -173,7 +172,6 @@ class FlowActor(Actor):
 
 
             # Print the global Map for debugging
-            print(globalMap)
 
 
             # We need to map the stream keys to the actual values from the kwargs
@@ -270,12 +268,6 @@ class FlowActor(Actor):
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
 
-                if event.type == EventType.ERROR:
-                    # raise event.value
-                    print(event)
-                    pass
-
-                print(event)
 
                 track = await self.track_mutation(
                     reference=event.source + "_track_" + str(t),
@@ -325,14 +317,12 @@ class FlowActor(Actor):
                             t=t,
                         )
 
-                        print("Return event", spawned_event)
                         if spawned_event.type == EventType.NEXT:
                             yield_dict = {}
 
                             for port, value in zip(return_stream, spawned_event.value):
                                 yield_dict[port.key] = value
 
-                            print("Yield dict", yield_dict)
                             await transport.log_event(
                                 kind=AssignationEventKind.YIELD,
                                 returns=yield_dict,
