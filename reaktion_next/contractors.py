@@ -12,9 +12,7 @@ from rekuest_next.utils import reserved, direct
 
 @runtime_checkable
 class NodeContractor(Protocol):
-    async def __call__(
-        self, node: RekuestNodeBase, actor: Actor
-    ) -> RPCContract: ...
+    async def __call__(self, node: RekuestNodeBase, actor: Actor) -> RPCContract: ...
 
 
 async def arkicontractor(node: RekuestNodeBase, actor: Actor) -> RPCContract:
@@ -34,9 +32,7 @@ async def arkicontractor(node: RekuestNodeBase, actor: Actor) -> RPCContract:
     return direct(node=arkinode, reference=node.id)
 
 
-async def arkimockcontractor(
-    node: RekuestNodeBase, actor: Actor
-) -> RPCContract:
+async def arkimockcontractor(node: RekuestNodeBase, actor: Actor) -> RPCContract:
     return mockuse(
         node=node,
         provision=actor.passport.provision,

@@ -101,9 +101,7 @@ class FlowActor(Actor):
         try:
 
             rekuest_nodes = [
-                x
-                for x in self.flow.graph.nodes
-                if isinstance(x, RekuestNodeBase)
+                x for x in self.flow.graph.nodes if isinstance(x, RekuestNodeBase)
             ]
 
             rekuest_contracts = {
@@ -121,11 +119,7 @@ class FlowActor(Actor):
 
             atomtransport = AtomTransport(queue=event_queue)
 
-
-
-            argNode = [
-                x for x in self.flow.graph.nodes if isinstance(x, ArgNode)
-            ][0]
+            argNode = [x for x in self.flow.graph.nodes if isinstance(x, ArgNode)][0]
             returnNode = [
                 x for x in self.flow.graph.nodes if isinstance(x, ReturnNode)
             ][0]
@@ -133,11 +127,8 @@ class FlowActor(Actor):
             participatingNodes = [
                 x
                 for x in self.flow.graph.nodes
-                if isinstance(x, RekuestNodeBase)
-                or isinstance(x, ReactiveNode)
+                if isinstance(x, RekuestNodeBase) or isinstance(x, ReactiveNode)
             ]
-
-                
 
             # Return node has only one input stream the returns
             return_stream = returnNode.ins[0]
@@ -147,11 +138,8 @@ class FlowActor(Actor):
             for i in stream:
                 stream_keys.append(i.key)
 
-
-
             globalMap: Dict[str, Dict[str, Any]] = {}
             streamMap: Dict[str, Any] = {}
-
 
             # We need to map the global keys to the actual values from the kwargs
             # Each node has a globals_map that maps the port key to the global key
@@ -164,19 +152,19 @@ class FlowActor(Actor):
             for node in participatingNodes:
                 for port_key, global_key in node.globals_map.items():
                     if global_key not in global_keys:
-                       raise ValueError(f"Global key {global_key} not found in globals")
+                        raise ValueError(
+                            f"Global key {global_key} not found in globals"
+                        )
                     if node.id not in globalMap:
                         globalMap[node.id] = {}
 
                     globalMap[node.id][port_key] = assignment.args[global_key]
 
-
             # Print the global Map for debugging
-
 
             # We need to map the stream keys to the actual values from the kwargs
             # Args nodes have a stream that maps the port key to the stream key
-            
+
             for port in self.definition.args:
                 if port.key in stream_keys:
                     streamMap[port.key] = assignment.args[port.key]
@@ -267,7 +255,6 @@ class FlowActor(Actor):
             while not complete:
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
-
 
                 track = await self.track_mutation(
                     reference=event.source + "_track_" + str(t),
