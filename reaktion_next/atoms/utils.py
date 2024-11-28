@@ -20,6 +20,7 @@ from reaktion_next.atoms.arkitekt_filter import ArkitektFilterAtom
 from reaktion_next.atoms.transformation.chunk import ChunkAtom
 from reaktion_next.atoms.transformation.buffer_complete import BufferCompleteAtom
 from reaktion_next.atoms.transformation.split import SplitAtom
+from reaktion_next.atoms.transformation.omit import OmitAtom
 from reaktion_next.atoms.combination.zip import ZipAtom
 from reaktion_next.atoms.transformation.filter import FilterAtom
 from reaktion_next.atoms.combination.withlatest import WithLatestAtom
@@ -132,6 +133,16 @@ def atomify(
                 globals=globals,
                 alog=alog,
             )
+        if node.implementation == ReactiveImplementation.OMIT:
+            return OmitAtom(
+                node=node,
+                transport=transport,
+                assignment=assignment,
+                globals=globals,
+                alog=alog,
+            )
+
+
         if node.implementation == ReactiveImplementation.BUFFER_COMPLETE:
             return BufferCompleteAtom(
                 node=node,
