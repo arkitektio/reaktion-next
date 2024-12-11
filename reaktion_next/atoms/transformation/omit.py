@@ -29,16 +29,14 @@ class OmitAtom(TransformationAtom):
 
                 if event.type == EventType.NEXT:
                     await self.transport.put(
-                                OutEvent(
-                                    handle="return_0",
-                                    type=EventType.NEXT,
-                                    value=[],
-                                    source=self.node.id,
-                                    caused_by=[event.current_t],
-                                )
+                        OutEvent(
+                            handle="return_0",
+                            type=EventType.NEXT,
+                            value=[],
+                            source=self.node.id,
+                            caused_by=[event.current_t],
+                        )
                     )
-
-                           
 
                 if event.type == EventType.COMPLETE:
                     await self.transport.put(

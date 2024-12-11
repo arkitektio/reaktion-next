@@ -142,7 +142,6 @@ def atomify(
                 alog=alog,
             )
 
-
         if node.implementation == ReactiveImplementation.BUFFER_COMPLETE:
             return BufferCompleteAtom(
                 node=node,
