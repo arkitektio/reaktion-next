@@ -7,7 +7,7 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
 [![PyPI status](https://img.shields.io/pypi/status/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
 
-next gen fluss workflow scheduler plugin for rekuest
+workflow scheduler plugin for rekuest_next
 
 ## Idea
 
@@ -20,5 +20,48 @@ workflow. This actor will keep track of the state of the workflow and acts as th
 
 ## Prerequesits
 
-reaktion is a rekuest plugin and requires the rekuest library. While we are trying to reduce
-the dependencies of rekuest, currently it makes only sense to use reaktion within the context of the arkitekt platform.
+Services: In order to use reaktion_next you need a working arkitekt server with both "rekuest" (remote app calling-service) and "fluss" -
+(workflow design and run recording module)" installed.
+
+Client: you need to install arkitekt_next with the "reaktion_next" extra enabled
+
+### Use inside an Arktiekt "Plugin"App
+
+Add the reaktion_next import to your imports
+
+```python
+from arkitekt import register
+import reaktion_next # autoinstalls the scheduling extensions
+
+@register
+def do_something() -> None:
+    """ Some other random installed functionaliry that is also provided """
+
+```
+
+Start your app via "arkitekt-next run dev". You should now see the
+reaktion badge appear on the AgentPage and you will find the scheduler
+in the Deploy Button subsection when deploying your app.
+
+### Use inside an Arkitekt "Standalone App"
+
+```python
+from arkitekt import register, easy
+import reaktion_next # autoinstalls the scheduling extensions
+
+@register
+def do_something() -> None:
+    """ Some other random installed functionaliry that is also provided """
+
+
+
+with easy("your_app_name", url="arkitekt-server-ulr") as e:
+   e.run() # will start a normal arkitekt app with reaktion enabled
+
+```
+
+## Experimental: Local Scheduling
+
+An Arkitekt app that imports reaktion_next can also run entire local workflows
+the will call registered function in memory, and does not to copy data from and
+to the arkitket server.
