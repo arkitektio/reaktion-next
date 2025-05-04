@@ -1,11 +1,11 @@
 import logging
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict
 import asyncio
 from pydantic import BaseModel, Field
 
 from fluss_next.api.schema import (
     ArgNode,
-    RekuestNodeBase,
+    RekuestActionNodeBase,
     Flow,
     ReactiveNode,
     ReturnNode,
@@ -19,21 +19,19 @@ from reaktion_next.atoms.transport import AtomTransport
 from reaktion_next.atoms.utils import atomify
 from reaktion_next.contractors import NodeContractor, arkicontractor
 from reaktion_next.events import EventType, InEvent, OutEvent
-
+from rekuest_next import messages
 from reaktion_next.utils import connected_events
 from rekuest_next.actors.base import Actor
 from rekuest_next.api.schema import (
-    AssignationEventKind,
     Reservation,
-    Node,
+    acollect,
 )
-from rekuest_next.postmans.contract import RPCContract
+from reaktion_next.rpc_contract import RPCContract
+
 
 from typing import Any
-from rekuest_next.collection.collector import AssignationCollector
-from rekuest_next.actors.transport.types import AssignTransport
-from rekuest_next.actors.types import Passport
 from rekuest_next.messages import Assign
+from reaktion_next.reference_counter import ReferenceCounter
 
 logger = logging.getLogger(__name__)
 
@@ -43,10 +41,8 @@ class NodeState(BaseModel):
 
 
 class FlowActor(Actor):
-    definition: Node
     is_generator: bool = False
     flow: Flow
-    agent: Any
     contracts: Dict[str, RPCContract] = Field(default_factory=dict)
     expand_inputs: bool = False
     shrink_outputs: bool = False
@@ -73,20 +69,12 @@ class FlowActor(Actor):
     ] = Field(default_factory=dict)
 
     reservation_state: Dict[str, Reservation] = Field(default_factory=dict)
-    _lock: Optional[asyncio.Lock] = None
-
-    async def on_provide(self, passport: Passport):
-        self._lock = asyncio.Lock()
-
-    async def on_local_log(self, reference, *args, **kwargs):
-        logger.log(f"Contract log for {reference} {args} {kwargs}")
 
     async def on_assign(
         self,
         assignment: Assign,
-        collector: AssignationCollector,
-        transport: AssignTransport,
     ):
+        reference_counter = ReferenceCounter()
 
         run = await self.run_mutation(
             assignation=assignment.assignation,
@@ -99,9 +87,8 @@ class FlowActor(Actor):
         tasks = []
 
         try:
-
             rekuest_nodes = [
-                x for x in self.flow.graph.nodes if isinstance(x, RekuestNodeBase)
+                x for x in self.flow.graph.nodes if isinstance(x, RekuestActionNodeBase)
             ]
 
             rekuest_contracts = {
@@ -127,7 +114,7 @@ class FlowActor(Actor):
             participatingNodes = [
                 x
                 for x in self.flow.graph.nodes
-                if isinstance(x, RekuestNodeBase) or isinstance(x, ReactiveNode)
+                if isinstance(x, RekuestActionNodeBase) or isinstance(x, ReactiveNode)
             ]
 
             # Return node has only one input stream the returns
@@ -165,9 +152,20 @@ class FlowActor(Actor):
             # We need to map the stream keys to the actual values from the kwargs
             # Args nodes have a stream that maps the port key to the stream key
 
-            for port in self.definition.args:
-                if port.key in stream_keys:
-                    streamMap[port.key] = assignment.args[port.key]
+            for key in stream_keys:
+                if key in assignment.args:
+                    streamMap[key] = assignment.args[key]
+                else:
+                    raise ValueError(
+                        f"Stream key {key} not found in args {assignment.args}"
+                    )
+
+            for key in global_keys:
+                if key not in assignment.args:
+                    raise ValueError(
+                        f"Global key {key} not found in args {assignment.args}"
+                    )
+                streamMap[key] = assignment.args[key]
 
             atoms = {
                 x.id: self.atomifier(
@@ -176,7 +174,8 @@ class FlowActor(Actor):
                     self.contracts.get(x.id, None),
                     globalMap.get(x.id, {}),
                     assignment,
-                    alog=transport.log_event,
+                    reference_counter,
+                    self,
                 )
                 for x in participatingNodes
             }
@@ -253,6 +252,7 @@ class FlowActor(Actor):
             returns = []
 
             while not complete:
+                await self.abreak(assignation=assignment.assignation)
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
 
@@ -310,9 +310,11 @@ class FlowActor(Actor):
                             for port, value in zip(return_stream, spawned_event.value):
                                 yield_dict[port.key] = value
 
-                            await transport.log_event(
-                                kind=AssignationEventKind.YIELD,
-                                returns=yield_dict,
+                            await self.asend(
+                                message=messages.YieldEvent(
+                                    assignation=assignment.assignation,
+                                    returns=yield_dict,
+                                )
                             )
 
                         if spawned_event.type == EventType.ERROR:
@@ -322,18 +324,19 @@ class FlowActor(Actor):
                             await self.snapshot_mutation(
                                 run=run, events=list(state.values()), t=t
                             )
-                            await transport.log_event(
-                                kind=AssignationEventKind.DONE,
-                                message="Done ! :)",
+                            await self.asend(
+                                message=messages.DoneEvent(
+                                    assignation=assignment.assignation,
+                                )
                             )
                             complete = True
 
                             logger.info("Done ! :)")
 
                     else:
-                        assert (
-                            spawned_event.target in atoms
-                        ), "Unknown target. Your flow is connected wrong"
+                        assert spawned_event.target in atoms, (
+                            "Unknown target. Your flow is connected wrong"
+                        )
                         if spawned_event.target in atoms:
                             await atoms[spawned_event.target].put(spawned_event)
 
@@ -342,7 +345,7 @@ class FlowActor(Actor):
 
             await asyncio.gather(*tasks, return_exceptions=True)
             logging.info("Collecting...")
-            await self.collector.collect(assignment.id)
+            await acollect(list(reference_counter.references))
             logging.info("Done ! :)")
             await self.close_mutation(run=run.id)
 
@@ -360,9 +363,11 @@ class FlowActor(Actor):
 
             await self.close_mutation(run=run.id)
 
-            await self.collector.collect(assignment.id)
-            await transport.log_event(
-                kind=AssignationEventKind.CANCELLED, message="Cancelled"
+            await acollect(list(reference_counter.references))
+            await self.asend(
+                message=messages.CancelledEvent(
+                    assignation=assignment.assignation,
+                )
             )
 
         except Exception as e:
@@ -370,10 +375,13 @@ class FlowActor(Actor):
             await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
 
             await self.close_mutation(run=run.id)
-            await self.collector.collect(assignment.id)
-            await transport.log_event(
-                kind=AssignationEventKind.CRITICAL,
-                message=repr(e),
+            await acollect(list(reference_counter.references))
+            await self.asend(
+                message=messages.CriticalEvent(
+                    assignation=assignment.assignation,
+                    error=repr(e),
+                    kind=EventType.ERROR,
+                )
             )
 
     async def on_unprovide(self):

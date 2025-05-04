@@ -2,9 +2,8 @@ import asyncio
 
 from typing import Any, List, Optional
 from reaktion_next.atoms.helpers import node_to_reference
-from rekuest_next.postmans.contract import RPCContract
-from fluss_next.api.schema import RekuestMapNode
-
+from fluss_next.api.schema import RekuestMapActionNode, PortKind
+from reaktion_next.rpc_contract import RPCContract
 from reaktion_next.atoms.generic import (
     MapAtom,
     MergeMapAtom,
@@ -13,25 +12,25 @@ from reaktion_next.atoms.generic import (
 )
 from reaktion_next.events import InEvent
 import logging
-from rekuest_next.utils import ReservationContext
 
 
 logger = logging.getLogger(__name__)
 
 
 class ArkitektMapAtom(MapAtom):
-    node: RekuestMapNode
+    node: RekuestMapActionNode
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
+        assert event.value is not None, "Event value should not be None"
 
         stream_one = self.node.ins[0]
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
         returns = await self.contract.acall_raw(
-            parent=self.assignment,
+            parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
             kwargs=kwargs,
         )
@@ -39,6 +38,9 @@ class ArkitektMapAtom(MapAtom):
         out = []
         stream_one = self.node.outs[0]
         for arg in stream_one:
+            if arg.kind == PortKind.MEMORY_STRUCTURE:
+                self.reference_counter.add_reference(returns[arg.key])
+
             out.append(returns[arg.key])
 
         return out
@@ -46,7 +48,7 @@ class ArkitektMapAtom(MapAtom):
 
 
 class ArkitektMergeMapAtom(MergeMapAtom):
-    node: RekuestMapNode
+    node: RekuestMapActionNode
     contract: RPCContract
 
     async def merge_map(self, event: InEvent) -> Optional[List[Any]]:
@@ -57,63 +59,70 @@ class ArkitektMergeMapAtom(MergeMapAtom):
             kwargs[item.key] = arg
 
         async for r in self.contract.aiterate_raw(
-            parent=self.assignment,
+            parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
             kwargs=kwargs,
         ):
             out = []
             stream_one = self.node.outs[0]
             for arg in stream_one:
+                if arg.kind == PortKind.MEMORY_STRUCTURE:
+                    self.reference_counter.add_reference(r[arg.key])
                 out.append(r[arg.key])
 
             yield out
 
 
 class ArkitektAsCompletedAtom(AsCompletedAtom):
-    node: RekuestMapNode
+    node: RekuestMapActionNode
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
 
-        stream_one = self.node.instream[0]
+        stream_one = self.node.ins[0]
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
         returns = await self.contract.acall_raw(
             kwargs=kwargs,
-            parent=self.assignment,
+            parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
         )
 
         out = []
-        stream_one = self.node.outstream[0]
+        stream_one = self.node.outs[0]
         for arg in stream_one:
+            if arg.kind == PortKind.MEMORY_STRUCTURE:
+                self.reference_counter.add_reference(returns[arg.key])
+
             out.append(returns[arg.key])
 
         return out
 
 
 class ArkitektOrderedAtom(OrderedAtom):
-    node: RekuestMapNode
+    node: RekuestMapActionNode
     contract: RPCContract
 
     async def map(self, event: InEvent) -> Optional[List[Any]]:
         kwargs = self.set_values
 
-        stream_one = self.node.instream[0]
+        stream_one = self.node.ins[0]
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
         returns = await self.contract.acall_raw(
             kwargs=kwargs,
-            parent=self.assignment,
+            parent=self.assignment.assignation,
             reference=node_to_reference(self.node, event),
         )
 
         out = []
-        stream_one = self.node.outstream[0]
+        stream_one = self.node.outs[0]
         for arg in stream_one:
+            if arg.kind == PortKind.MEMORY_STRUCTURE:
+                self.reference_counter.add_reference(returns[arg.key])
             out.append(returns[arg.key])
 
         return out

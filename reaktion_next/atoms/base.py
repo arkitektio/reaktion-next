@@ -7,6 +7,9 @@ from reaktion_next.events import EventType, InEvent, OutEvent
 import logging
 from rekuest_next.messages import Assign
 from reaktion_next.atoms.transport import AtomTransport
+from reaktion_next.reference_counter import ReferenceCounter
+from rekuest_next.actors.base import Actor
+
 from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -14,11 +17,12 @@ logger = logging.getLogger(__name__)
 
 class Atom(BaseModel):
     node: BaseGraphNodeBase
+    reference_counter: ReferenceCounter
     transport: AtomTransport
-    alog: Optional[Callable[[str, str, str], Awaitable[None]]] = Field(exclude=True)
+    actor: Actor
     globals: Dict[str, Any] = Field(default_factory=dict)
     assignment: Assign
-
+    hold_references: Dict[str, Any] = Field(default_factory=dict)
     _private_queue: asyncio.Queue = None
 
     async def run(self):

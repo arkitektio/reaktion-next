@@ -1,8 +1,8 @@
 from typing import List, Optional
-from rekuest_next.api.schema import DefinitionInput, PortInput, NodeKind
+from rekuest_next.api.schema import DefinitionInput, PortInput, ActionKind
 from fluss_next.api.schema import (
     Graph,
-    RekuestNodeBase,
+    RekuestActionNodeBase,
     ReactiveNode,
     ReactiveImplementation,
     ArgNode,
@@ -37,17 +37,17 @@ def connected_events(graph: Graph, event: OutEvent, t: int) -> List[InEvent]:
     return events
 
 
-def infer_kind_from_graph(graph: Graph) -> NodeKind:
-    kind = NodeKind.FUNCTION
+def infer_kind_from_graph(graph: Graph) -> ActionKind:
+    kind = ActionKind.FUNCTION
 
     for node in graph.nodes:
-        if isinstance(node, RekuestNodeBase):
-            if node.kind == NodeKind.GENERATOR:
-                kind = NodeKind.GENERATOR
+        if isinstance(node, RekuestActionNodeBase):
+            if node.action_kind == ActionKind.GENERATOR:
+                kind = ActionKind.GENERATOR
                 break
         if isinstance(node, ReactiveNode):
             if node.implementation == ReactiveImplementation.CHUNK:
-                kind = NodeKind.GENERATOR
+                kind = ActionKind.GENERATOR
                 break
 
     return kind
@@ -57,7 +57,7 @@ def convert_flow_to_definition(
     flow: Flow,
     name: str = None,
     description: str = None,
-    kind: Optional[NodeKind] = None,
+    kind: Optional[ActionKind] = None,
 ) -> DefinitionInput:
     # assert localnodes are in the definitionregistry
 

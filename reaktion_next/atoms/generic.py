@@ -156,6 +156,7 @@ class MergeMapAtom(Atom):
 
                 if event.type == EventType.NEXT:
                     try:
+                        print("Getting new event", event)
                         async for result in self.merge_map(event):
                             if result is None:
                                 value = ()

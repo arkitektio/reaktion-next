@@ -1,5 +1,5 @@
 import pytest
-from fluss.api.schema import (
+from fluss_next.api.schema import (
     FlowFragment,
     ArkitektNodeFragment,
     RunMutationStart,

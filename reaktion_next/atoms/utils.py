@@ -1,13 +1,14 @@
 from typing import Awaitable, Callable, Dict
+from reaktion_next.atoms.transformation.buffer_count import BufferCountAtom
 from rekuest_next.messages import Assign
 from fluss_next.api.schema import (
-    RekuestFilterNode,
-    RekuestMapNode,
+    RekuestFilterActionNode,
+    RekuestMapActionNode,
     ReactiveNode,
     BaseGraphNodeBase,
     MapStrategy,
     ReactiveImplementation,
-    NodeKind,
+    ActionKind,
 )
 import asyncio
 from reaktion_next.atoms.arkitekt import (
@@ -26,12 +27,14 @@ from reaktion_next.atoms.transformation.filter import FilterAtom
 from reaktion_next.atoms.combination.withlatest import WithLatestAtom
 from reaktion_next.atoms.combination.gate import GateAtom
 from reaktion_next.atoms.filter.all import AllAtom
-from rekuest_next.postmans.contract import RPCContract
+from reaktion_next.rpc_contract import RPCContract
 from .base import Atom
 from .transport import AtomTransport
 from rekuest_next.messages import Assign
 from typing import Any, Optional
 from reaktion_next.atoms.operations.math import MathAtom, operation_map
+from rekuest_next.actors.base import Actor
+from reaktion_next.reference_counter import ReferenceCounter
 
 
 def atomify(
@@ -40,10 +43,11 @@ def atomify(
     contract: Optional[RPCContract],
     globals: Dict[str, Any],
     assignment: Assign,
-    alog: Callable[[Assign, str, str], Awaitable[None]] = None,
+    reference_counter: ReferenceCounter,
+    actor: Actor = None,
 ) -> Atom:
-    if isinstance(node, RekuestMapNode):
-        if node.node_kind == NodeKind.FUNCTION:
+    if isinstance(node, RekuestMapActionNode):
+        if node.action_kind == ActionKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektMapAtom(
                     node=node,
@@ -51,7 +55,8 @@ def atomify(
                     transport=transport,
                     assignment=assignment,
                     globals=globals,
-                    alog=alog,
+                    actor=actor,
+                    reference_counter=reference_counter,
                 )
             if node.map_strategy == MapStrategy.AS_COMPLETED:
                 return ArkitektAsCompletedAtom(
@@ -60,7 +65,8 @@ def atomify(
                     transport=transport,
                     assignment=assignment,
                     globals=globals,
-                    alog=alog,
+                    actor=actor,
+                    reference_counter=reference_counter,
                 )
             if node.map_strategy == MapStrategy.ORDERED:
                 return ArkitektAsCompletedAtom(
@@ -69,25 +75,27 @@ def atomify(
                     transport=transport,
                     assignment=assignment,
                     globals=globals,
-                    alog=alog,
+                    actor=actor,
+                    reference_counter=reference_counter,
                 )
 
             raise NotImplementedError(
                 f"Map strategy {node.map_strategy} is not implemented"
             )
-        if node.node_kind == NodeKind.GENERATOR:
+        if node.action_kind == ActionKind.GENERATOR:
             return ArkitektMergeMapAtom(
                 node=node,
                 contract=contract,
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
 
         raise NotImplementedError(f"Node kind {node.kind} is not implemented")
-    if isinstance(node, RekuestFilterNode):
-        if node.node_kind == NodeKind.FUNCTION:
+    if isinstance(node, RekuestFilterActionNode):
+        if node.action_kind == ActionKind.FUNCTION:
             if node.map_strategy == MapStrategy.MAP:
                 return ArkitektFilterAtom(
                     node=node,
@@ -95,9 +103,10 @@ def atomify(
                     transport=transport,
                     assignment=assignment,
                     globals=globals,
-                    alog=alog,
+                    actor=actor,
+                    reference_counter=reference_counter,
                 )
-        if node.node_kind == NodeKind.GENERATOR:
+        if node.action_kind == ActionKind.GENERATOR:
             raise NotImplementedError("Generator cannot be used as a filter")
 
     if isinstance(node, ReactiveNode):
@@ -107,7 +116,17 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
+            )
+        if node.implementation == ReactiveImplementation.BUFFER_COUNT:
+            return BufferCountAtom(
+                node=node,
+                transport=transport,
+                assignment=assignment,
+                globals=globals,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.FILTER:
             return FilterAtom(
@@ -115,7 +134,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.CHUNK:
             return ChunkAtom(
@@ -123,7 +143,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.GATE:
             return GateAtom(
@@ -131,7 +152,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.OMIT:
             return OmitAtom(
@@ -139,7 +161,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
 
         if node.implementation == ReactiveImplementation.BUFFER_COMPLETE:
@@ -148,7 +171,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.WITHLATEST:
             return WithLatestAtom(
@@ -156,7 +180,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.COMBINELATEST:
             return WithLatestAtom(
@@ -164,7 +189,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.SPLIT:
             return SplitAtom(
@@ -172,7 +198,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation == ReactiveImplementation.ALL:
             return AllAtom(
@@ -180,7 +207,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
         if node.implementation in operation_map:
             return MathAtom(
@@ -188,7 +216,8 @@ def atomify(
                 transport=transport,
                 assignment=assignment,
                 globals=globals,
-                alog=alog,
+                actor=actor,
+                reference_counter=reference_counter,
             )
 
     raise NotImplementedError(f"Atom for {node} {type(node)} is not implemented")
