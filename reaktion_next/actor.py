@@ -37,10 +37,12 @@ logger = logging.getLogger(__name__)
 
 
 class NodeState(BaseModel):
+    """ NodeState is a state of a node in the flow. """
     latestevent: OutEvent
 
 
 class FlowActor(Actor):
+    """ FlowActor is an actor that runs a flow. """
     is_generator: bool = False
     flow: Flow
     contracts: Dict[str, RPCContract] = Field(default_factory=dict)
@@ -73,7 +75,7 @@ class FlowActor(Actor):
     async def on_assign(
         self,
         assignment: Assign,
-    ):
+    ) -> None:
         reference_counter = ReferenceCounter()
 
         run = await self.run_mutation(

@@ -1,6 +1,8 @@
 import asyncio
 
 from typing import Any, List, Optional
+
+from pydantic import BaseModel
 from reaktion_next.atoms.helpers import node_to_reference
 from fluss_next.api.schema import RekuestMapActionNode, PortKind
 from reaktion_next.rpc_contract import RPCContract
@@ -12,12 +14,17 @@ from reaktion_next.atoms.generic import (
 )
 from reaktion_next.events import InEvent
 import logging
+from rekuest_next.messages import Assign
 
 
 logger = logging.getLogger(__name__)
 
 
-class ArkitektMapAtom(MapAtom):
+class RekuestAtom(BaseModel):
+    assignment: Assign
+
+
+class ArkitektMapAtom(MapAtom, RekuestAtom):
     node: RekuestMapActionNode
     contract: RPCContract
 
@@ -47,7 +54,7 @@ class ArkitektMapAtom(MapAtom):
         # return await self.contract.aassign(*args)
 
 
-class ArkitektMergeMapAtom(MergeMapAtom):
+class ArkitektMergeMapAtom(MergeMapAtom, RekuestAtom):
     node: RekuestMapActionNode
     contract: RPCContract
 
@@ -73,7 +80,7 @@ class ArkitektMergeMapAtom(MergeMapAtom):
             yield out
 
 
-class ArkitektAsCompletedAtom(AsCompletedAtom):
+class ArkitektAsCompletedAtom(AsCompletedAtom, RekuestAtom):
     node: RekuestMapActionNode
     contract: RPCContract
 
@@ -101,7 +108,7 @@ class ArkitektAsCompletedAtom(AsCompletedAtom):
         return out
 
 
-class ArkitektOrderedAtom(OrderedAtom):
+class ArkitektOrderedAtom(OrderedAtom, RekuestAtom):
     node: RekuestMapActionNode
     contract: RPCContract
 

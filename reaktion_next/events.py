@@ -1,5 +1,5 @@
 from typing import List, Tuple, Union, List, Tuple, Any, Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from enum import Enum
 
 
@@ -28,6 +28,7 @@ class InEvent(BaseModel):
     """ The attached value of the event"""
     current_t: int
     """ The current (in loop) time of the event"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @field_validator("handle")
     def validate_handle(cls, v):
@@ -43,8 +44,6 @@ class InEvent(BaseModel):
 
         return v
 
-    class Config:
-        arbitrary_types_allowed = True
 
 
 class OutEvent(BaseModel):
@@ -62,6 +61,7 @@ class OutEvent(BaseModel):
     )
     caused_by: Optional[Tuple[int, ...]]
     """ The attached value of the event"""
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     @field_validator("handle", mode="before")
     def validate_handle(cls, v):
@@ -103,5 +103,4 @@ class OutEvent(BaseModel):
             "value": value,
         }
 
-    class Config:
-        arbitrary_types_allowed = True
+    

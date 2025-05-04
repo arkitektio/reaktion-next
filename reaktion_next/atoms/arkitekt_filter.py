@@ -24,11 +24,11 @@ class ArkitektFilterAtom(FilterAtom):
     async def filter(self, event: InEvent) -> Optional[bool]:
         kwargs = self.set_values
 
-        stream_one = self.node.instream[0]
+        stream_one = self.node.ins[0]
         for arg, item in zip(event.value, stream_one):
             kwargs[item.key] = arg
 
-        returns = await self.contract.aassign_retry(
+        returns = await self.contract.acall_raw(
             kwargs=kwargs,
             parent=self.assignment,
             reference=node_to_reference(self.node, event),
