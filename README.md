@@ -1,4 +1,4 @@
-# reaktion-net
+# reaktion-next
 
 [![codecov](https://codecov.io/gh/arkitektio/omero-ark/branch/master/graph/badge.svg?token=UGXEA2THBV)](https://codecov.io/gh/arkitektio/arkitektio)
 [![PyPI version](https://badge.fury.io/py/rekuest_next.svg)](https://pypi.org/project/rekuest/)
@@ -7,7 +7,7 @@
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
 [![PyPI status](https://img.shields.io/pypi/status/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
 
-workflow scheduler plugin for rekuest_next
+workflow scheduler  for arkitekt
 
 ## Idea
 
@@ -23,14 +23,14 @@ workflow. This actor will keep track of the state of the workflow and acts as th
 Services: In order to use reaktion_next you need a working arkitekt server with both "rekuest" (remote app calling-service) and "fluss" -
 (workflow design and run recording module)" installed.
 
-Client: you need to install arkitekt_next with the "reaktion_next" extra enabled
+Client: you need to install arkitekt-next with the "reaktion_next" extra enabled
 
 ### Use inside an Arktiekt "Plugin"App
 
 Add the reaktion_next import to your imports
 
 ```python
-from arkitekt import register
+from arkitekt_next import register
 import reaktion_next # autoinstalls the scheduling extensions
 
 @register
