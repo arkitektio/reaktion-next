@@ -1,5 +1,5 @@
 import logging
-from typing import Callable, Dict
+from typing import Dict
 import asyncio
 from pydantic import BaseModel, Field
 
@@ -14,6 +14,7 @@ from fluss_next.api.schema import (
     aclose_run,
     atrack,
 )
+from rath.scalars import ID
 from reaktion_next.atoms.transport import AtomTransport
 
 from reaktion_next.atoms.utils import atomify
@@ -37,32 +38,48 @@ logger = logging.getLogger(__name__)
 
 
 class NodeState(BaseModel):
-    """ NodeState is a state of a node in the flow. """
+    """NodeState is a state of a node in the flow."""
+
     latestevent: OutEvent
 
 
 class FlowActor(Actor):
-    """ FlowActor is an actor that runs a flow. """
+    """FlowActor is an Actor that runs a workflow.
+    
+    
+    Flow actors load the flow during execution and then run the flow 
+    by sending the events to the nodes in the flow. These nodes acts 
+    as "Atoms" that are executed in parallel. 
+    
+    
+    """
+
     is_generator: bool = False
-    flow: Flow
-    contracts: Dict[str, RPCContract] = Field(default_factory=dict)
-    expand_inputs: bool = False
+    """is_generator is a flag that indicates if the actor is a generator or not. """
+    flow: Flow = Field(
+        description="Flow is the flow that the actor runs. It will be set by the flow extension.",
+    )
+    contracts: Dict[str, RPCContract] = Field(default_factory=dict, description="Contracts that are used to run the flow. ")
+    expand_inputs: bool = False 
     shrink_outputs: bool = False
     provided: bool = False
-    arkitekt_contractor: NodeContractor = arkicontractor
-    snapshot_interval: int = 40
-    condition_snapshot_interval: int = 40
-    contract_t: int = 0
+    arkitekt_contractor: NodeContractor = Field( 
+        default=arkicontractor,
+        description="A node contractor that can either spawn local, actors of use remote actors to perform the task",
+    )
+    """ Arkitekt contractor is a function that takes a node and returns a contract """
+    snapshot_interval: int = Field(
+        default=40,
+        description="Snapshot interval is the interval at which the flow is snapshotted. "
+        "This is used to track the state of the flow and to resume it later.",
+    )
+    """ Snapshot interval is the interval at which the flow is snapshotted. """
+    condition_snapshot_interval: int = 40 
+    contract_t: int = 0 
 
     # Functionality for running the flow
 
-    # Assign Related Functionality
-    run_mutation: Callable = acreate_run
-    snapshot_mutation: Callable = asnapshot
-    track_mutation: Callable = atrack
-    close_mutation: Callable = aclose_run
-
-    atomifier: Callable = atomify
+    atomifier = atomify
     """ Atomifier is a function that takes a node and returns an atom """
 
     run_states: Dict[
@@ -76,13 +93,15 @@ class FlowActor(Actor):
         self,
         assignment: Assign,
     ) -> None:
+        """ On assign is called when the workflow is run"""
         reference_counter = ReferenceCounter()
 
-        run = await self.run_mutation(
-            assignation=assignment.assignation,
-            flow=self.flow,
+        run = await acreate_run(
+            assignation=ID.validate(assignment.assignation),
+            flow=self.flow.id,
             snapshot_interval=self.snapshot_interval,
         )
+        # Runs track the state of the flow interactively
 
         t = 0
         state = {}
@@ -102,9 +121,9 @@ class FlowActor(Actor):
             futures = [contract.aenter() for contract in self.contracts.values()]
             await asyncio.gather(*futures)
 
-            await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
+            await asnapshot(run=run.id, events=list(state.values()), t=t)
 
-            event_queue = asyncio.Queue()
+            event_queue: asyncio.Queue[InEvent] = asyncio.Queue()
 
             atomtransport = AtomTransport(queue=event_queue)
 
@@ -123,7 +142,7 @@ class FlowActor(Actor):
             return_stream = returnNode.ins[0]
             # Arg node has only one output stream
             stream = argNode.outs[0]
-            stream_keys = []
+            stream_keys: list[str] = []
             for i in stream:
                 stream_keys.append(i.key)
 
@@ -134,7 +153,7 @@ class FlowActor(Actor):
             # Each node has a globals_map that maps the port key to the global key
             # So we need to map the global key to the actual value from the kwargs
 
-            global_keys = []
+            global_keys: list[str] = []
             for i in self.flow.graph.globals:
                 global_keys.append(i.port.key)
 
@@ -170,7 +189,7 @@ class FlowActor(Actor):
                 streamMap[key] = assignment.args[key]
 
             atoms = {
-                x.id: self.atomifier(
+                x.id: atomify(
                     x,
                     atomtransport,
                     self.contracts.get(x.id, None),
@@ -254,11 +273,11 @@ class FlowActor(Actor):
             returns = []
 
             while not complete:
-                await self.abreak(assignation=assignment.assignation)
+                await self.abreak(assignation_id=assignment.assignation)
                 event: OutEvent = await event_queue.get()
                 event_queue.task_done()
 
-                track = await self.track_mutation(
+                track = await atrack(
                     reference=event.source + "_track_" + str(t),
                     run=run,
                     source=event.source,
@@ -274,9 +293,7 @@ class FlowActor(Actor):
                 # We tracked the events and proceed
 
                 if t % self.snapshot_interval == 0:
-                    await self.snapshot_mutation(
-                        run=run, events=list(state.values()), t=t
-                    )
+                    await asnapshot(run=run, events=list(state.values()), t=t)
 
                 # Creat new events with the new timepoint
                 spawned_events = connected_events(self.flow.graph, event, t)
@@ -290,7 +307,7 @@ class FlowActor(Actor):
                     logger.info(f"-> {spawned_event}")
 
                     if spawned_event.target == returnNode.id:
-                        track = await self.track_mutation(
+                        track = await atrack(
                             reference=event.source + "_track_" + str(t),
                             run=run,
                             source=spawned_event.target,
@@ -323,9 +340,7 @@ class FlowActor(Actor):
                             raise spawned_event.exception
 
                         if spawned_event.type == EventType.COMPLETE:
-                            await self.snapshot_mutation(
-                                run=run, events=list(state.values()), t=t
-                            )
+                            await asnapshot(run=run, events=list(state.values()), t=t)
                             await self.asend(
                                 message=messages.DoneEvent(
                                     assignation=assignment.assignation,
@@ -349,12 +364,12 @@ class FlowActor(Actor):
             logging.info("Collecting...")
             await acollect(list(reference_counter.references))
             logging.info("Done ! :)")
-            await self.close_mutation(run=run.id)
+            await aclose_run(run=run.id)
 
         except asyncio.CancelledError:
             for task in tasks:
                 task.cancel()
-            await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
+            await asnapshot(run=run, events=list(state.values()), t=t)
 
             try:
                 await asyncio.wait_for(
@@ -363,7 +378,7 @@ class FlowActor(Actor):
             except asyncio.TimeoutError:
                 pass
 
-            await self.close_mutation(run=run.id)
+            await aclose_run(run=run.id)
 
             await acollect(list(reference_counter.references))
             await self.asend(
@@ -374,15 +389,14 @@ class FlowActor(Actor):
 
         except Exception as e:
             logging.critical(f"Assignation {assignment} failed", exc_info=True)
-            await self.snapshot_mutation(run=run, events=list(state.values()), t=t)
+            await asnapshot(run=run, events=list(state.values()), t=t)
 
-            await self.close_mutation(run=run.id)
+            await aclose_run(run=run.id)
             await acollect(list(reference_counter.references))
             await self.asend(
                 message=messages.CriticalEvent(
                     assignation=assignment.assignation,
                     error=repr(e),
-                    kind=EventType.ERROR,
                 )
             )
 

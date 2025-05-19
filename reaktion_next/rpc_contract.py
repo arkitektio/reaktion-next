@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Protocol, runtime_checkable
+from typing import Any, AsyncGenerator, Dict, Optional, Protocol, runtime_checkable
 from koil.composition.base import KoiledModel
 from rekuest_next.api.schema import Action
 from rekuest_next.messages import Assign
@@ -17,7 +17,7 @@ class RPCContract(Protocol):
         self,
         kwargs: Dict[str, Any],
         parent: Optional[Assign] = None,
-        reference: str = None,
+        reference: str | None = None,
         assign_timeout: Optional[float] = None,
         timeout_is_recoverable: bool = False,
     ): ...
@@ -26,7 +26,7 @@ class RPCContract(Protocol):
         self,
         kwargs: Dict[str, Any],
         parent: Optional[Assign] = None,
-        reference: str = None,
+        reference: str | None = None,
         assign_timeout: Optional[float] = None,
         timeout_is_recoverable: bool = False,
     ): ...
@@ -51,7 +51,7 @@ class DirectContract(KoiledModel):
         self,
         kwargs: Dict[str, Any],
         parent: Optional[Assign] = None,
-        reference: str = None,
+        reference: str | None = None,
         assign_timeout: Optional[float] = None,
         timeout_is_recoverable: bool = False,
     ):
@@ -67,18 +67,18 @@ class DirectContract(KoiledModel):
             timeout_is_recoverable=timeout_is_recoverable,
         )
 
-    async def aiterate_raw(
+    def aiterate_raw(
         self,
         kwargs: Dict[str, Any],
         parent: Optional[Assign] = None,
-        reference: str = None,
+        reference: str | None = None,
         assign_timeout: Optional[float] = None,
         timeout_is_recoverable: bool = False,
-    ):
+    ) -> AsyncGenerator[Any, None]:
         """Call the function or generator in a blocking or non-blocking way.
         This method should be implemented by the subclass.
         """
-        return await aiterate_raw(
+        return aiterate_raw(
             kwargs=kwargs,
             action=self.action,
             parent=parent,

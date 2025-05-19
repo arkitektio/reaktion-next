@@ -46,7 +46,7 @@ class ArkitektMapAtom(MapAtom, RekuestAtom):
         stream_one = self.node.outs[0]
         for arg in stream_one:
             if arg.kind == PortKind.MEMORY_STRUCTURE:
-                self.reference_counter.add_reference(returns[arg.key])
+                self.reference_counter.add_reference(str(returns[arg.key]))
 
             out.append(returns[arg.key])
 

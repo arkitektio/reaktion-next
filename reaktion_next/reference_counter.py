@@ -1,7 +1,5 @@
-from typing import Dict
 from pydantic import BaseModel, Field
 from typing import Set
-from rekuest_next.agents.base import Agent
 
 
 class ReferenceCounter(BaseModel):
@@ -9,4 +7,6 @@ class ReferenceCounter(BaseModel):
 
     def add_reference(self, key: str):
         """Adds a reference to a structure in the reference counter."""
+        if isinstance(key, int):
+            key = str(key)
         self.references.add(key)

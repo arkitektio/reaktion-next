@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, List, Tuple, Any, Optional
+from typing import List, Literal, Tuple, Union, List, Tuple, Any, Optional
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from enum import Enum
 
@@ -13,12 +13,11 @@ Returns = Tuple[Any, ...]
 
 
 class InEvent(BaseModel):
+    type: EventType = Field(..., description="The event type")
     target: str
     """The node that is targeted by the event"""
     handle: str = Field(..., description="The handle of the port")
     """ The handle of the port that emitted the event"""
-    type: EventType = Field(..., description="The event type")
-    """ The type of event"""
     value: Optional[Returns] = Field(
         None, description="The value of the event (null, exception or any"
     )
@@ -45,7 +44,6 @@ class InEvent(BaseModel):
         return v
 
 
-
 class OutEvent(BaseModel):
     source: str
     """ The node that emitted the event """
@@ -54,10 +52,10 @@ class OutEvent(BaseModel):
     type: EventType = Field(..., description="The event type")
     """ The type of event"""
     value: Optional[Returns] = Field(
-        None, description="The value of the event (null, exception or any"
+        default=None, description="The value of the event (null, exception or any"
     )
     exception: Optional[Exception] = Field(
-        None, description="The value of the event (null, exception or any"
+        default=None, description="The value of the event (null, exception or any"
     )
     caused_by: Optional[Tuple[int, ...]]
     """ The attached value of the event"""
@@ -102,5 +100,3 @@ class OutEvent(BaseModel):
             "type": self.type,
             "value": value,
         }
-
-    

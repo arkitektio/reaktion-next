@@ -1,8 +1,7 @@
 import asyncio
-from typing import List, Tuple, Optional
-from rekuest_next.api.schema import AssignationLogLevel
+from typing import List, Optional
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent, InEvent
+from reaktion_next.events import EventType, NextEvent, OutEvent, InEvent
 import logging
 from pydantic import Field
 import functools
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class CombineLatestAtom(CombinationAtom):
-    state: List[Optional[InEvent]] = Field(default_factory=lambda: [None, None])
+    state: List[Optional[NextEvent]] = Field(default_factory=lambda: [None, None])
 
     async def run(self):
         try:
@@ -24,9 +23,10 @@ class CombineLatestAtom(CombinationAtom):
                         OutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
+                            value=None,
                             exception=event.exception,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break
@@ -40,7 +40,9 @@ class CombineLatestAtom(CombinationAtom):
                                 handle="return_0",
                                 type=EventType.COMPLETE,
                                 source=self.node.id,
-                                caused_by=[event.current_t],
+                                value=None,
+                                exception=None,
+                                caused_by=(event.current_t,),
                             )
                         )
                         break
@@ -56,6 +58,7 @@ class CombineLatestAtom(CombinationAtom):
                                 value=functools.reduce(
                                     lambda a, b: a.value + b.value, self.state
                                 ),
+                                exception=None,
                                 source=self.node.id,
                                 caused_by=map(lambda x: x.current_t, self.state),
                             )

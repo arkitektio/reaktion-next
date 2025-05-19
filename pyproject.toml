@@ -1,30 +1,18 @@
 [project]
 name = "reaktion-next"
-version = "0.0.0" 
+version = "0.1.0" 
 readme = "README.md"
 readme-content-type = "text/markdown"
 homepage = "https://arkitekt.live"
 description = "rpc and node backbone"
 authors = [{ name = "jhnnsrs", email = "jhnnsrs@gmail.com" }]
-requires-python = ">=3.9, <4.0"
+requires-python = ">=3.11, <4.0"
 license = "GPL-3.0-or-later"
 dependencies = [
-    "docstring-parser>=0.11",
-    "inflection>=0.5.1",
-    "websockets>=12.0",
-    "pydantic>=2",
-    "rath>=1.0.0",
-    "fieldz>=0.0.2",
-    "jsonpatch>=1.33",
-    "koil>=1.0.2",
-    "fluss-next>=0.4.0",
-    "rekuest-next>=0.5.9",
+    "fluss-next>=0.6.1",
+    "rekuest-next>=0.8.1",
 ]
 
-[project.optional-dependencies]
-types = [
-    "annotated-types>=0.5.0",
-]
 
 [tool.uv]
 dev-dependencies =  [

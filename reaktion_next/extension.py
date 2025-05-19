@@ -1,3 +1,4 @@
+from rath.scalars import ID
 from reaktion_next.actor import FlowActor
 from rekuest_next.agents.base import BaseAgent
 import logging
@@ -17,7 +18,7 @@ class ReaktionExtension(BaseModel):
     extension_name: str = "reaktion"
     cleanup: bool = False
 
-    async def astart(self, instance_id):
+    async def astart(self, instance_id: str):
         pass
 
     def get_name(self):
@@ -30,8 +31,8 @@ class ReaktionExtension(BaseModel):
         self,
         agent: "BaseAgent",
         interface: str,
-    ) -> Optional[Actor]:
-        t = await aget_flow(id=interface)
+    ) -> Actor:
+        t = await aget_flow(id=ID.validate(interface))
 
         return FlowActor(
             flow=t,
@@ -41,7 +42,7 @@ class ReaktionExtension(BaseModel):
     async def aget_implementations(
         self,
     ) -> list[ImplementationInput]:
-        templates = []
+        templates: list[ImplementationInput] = []
         return templates
 
     async def atear_down(self):
