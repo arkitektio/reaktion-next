@@ -1,12 +1,20 @@
 # CHANGELOG
 
 
+## v0.4.0 (2025-08-03)
+
+
 ## v0.3.1 (2025-05-19)
 
 ### Bug Fixes
 
 - A bit more documentation
   ([`068ca84`](https://github.com/arkitektio/reaktion-next/commit/068ca84b558e6e5f5f4c9e35da4032829c43e19a))
+
+### Features
+
+- Fix the events
+  ([`7455126`](https://github.com/arkitektio/reaktion-next/commit/74551261e7bbd79708af37a1ebb2a793ea98dd04))
 
 
 ## v0.3.0 (2025-05-19)
