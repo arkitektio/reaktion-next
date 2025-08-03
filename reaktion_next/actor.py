@@ -12,6 +12,7 @@ from fluss_next.api.schema import (
     acreate_run,
     asnapshot,
     aclose_run,
+    TrackMutationTrack,
     atrack,
 )
 from rath.scalars import ID
@@ -19,7 +20,16 @@ from reaktion_next.atoms.transport import AtomTransport
 
 from reaktion_next.atoms.utils import atomify
 from reaktion_next.contractors import NodeContractor, arkicontractor
-from reaktion_next.events import EventType, InEvent, OutEvent
+from reaktion_next.events import (
+    ErrorInEvent,
+    EventType,
+    InEvent,
+    OutEvent,
+    NextInEvent,
+    CompleteInEvent,
+    NextOutEvent,
+    CompleteOutEvent,
+)
 from rekuest_next import messages
 from reaktion_next.utils import connected_events
 from rekuest_next.actors.base import Actor
@@ -45,13 +55,13 @@ class NodeState(BaseModel):
 
 class FlowActor(Actor):
     """FlowActor is an Actor that runs a workflow.
-    
-    
-    Flow actors load the flow during execution and then run the flow 
-    by sending the events to the nodes in the flow. These nodes acts 
-    as "Atoms" that are executed in parallel. 
-    
-    
+
+
+    Flow actors load the flow during execution and then run the flow
+    by sending the events to the nodes in the flow. These nodes acts
+    as "Atoms" that are executed in parallel.
+
+
     """
 
     is_generator: bool = False
@@ -59,11 +69,13 @@ class FlowActor(Actor):
     flow: Flow = Field(
         description="Flow is the flow that the actor runs. It will be set by the flow extension.",
     )
-    contracts: Dict[str, RPCContract] = Field(default_factory=dict, description="Contracts that are used to run the flow. ")
-    expand_inputs: bool = False 
+    contracts: Dict[str, RPCContract] = Field(
+        default_factory=dict, description="Contracts that are used to run the flow. "
+    )
+    expand_inputs: bool = False
     shrink_outputs: bool = False
     provided: bool = False
-    arkitekt_contractor: NodeContractor = Field( 
+    arkitekt_contractor: NodeContractor = Field(
         default=arkicontractor,
         description="A node contractor that can either spawn local, actors of use remote actors to perform the task",
     )
@@ -74,8 +86,8 @@ class FlowActor(Actor):
         "This is used to track the state of the flow and to resume it later.",
     )
     """ Snapshot interval is the interval at which the flow is snapshotted. """
-    condition_snapshot_interval: int = 40 
-    contract_t: int = 0 
+    condition_snapshot_interval: int = 40
+    contract_t: int = 0
 
     # Functionality for running the flow
 
@@ -93,7 +105,7 @@ class FlowActor(Actor):
         self,
         assignment: Assign,
     ) -> None:
-        """ On assign is called when the workflow is run"""
+        """On assign is called when the workflow is run"""
         reference_counter = ReferenceCounter()
 
         run = await acreate_run(
@@ -104,7 +116,7 @@ class FlowActor(Actor):
         # Runs track the state of the flow interactively
 
         t = 0
-        state = {}
+        state: Dict[ID, TrackMutationTrack] = {}
         tasks = []
 
         try:
@@ -123,7 +135,7 @@ class FlowActor(Actor):
 
             await asnapshot(run=run.id, events=list(state.values()), t=t)
 
-            event_queue: asyncio.Queue[InEvent] = asyncio.Queue()
+            event_queue: asyncio.Queue[OutEvent] = asyncio.Queue()
 
             atomtransport = AtomTransport(queue=event_queue)
 
@@ -206,14 +218,13 @@ class FlowActor(Actor):
             logger.info("Starting all Atoms")
             value = [streamMap[key] for key in stream_keys]
 
-            initial_event = OutEvent(
+            initial_event = NextOutEvent(
                 handle="return_0",
-                type=EventType.NEXT,
                 source=argNode.id,
                 value=value,
                 caused_by=[t],
             )
-            initial_done_event = OutEvent(
+            initial_done_event = CompleteOutEvent(
                 handle="return_0",
                 type=EventType.COMPLETE,
                 source=argNode.id,
@@ -251,14 +262,14 @@ class FlowActor(Actor):
                 assert node.id in atoms, "Atom not found. Should not happen."
                 atom = atoms[node.id]
 
-                initial_event = InEvent(
+                initial_event = NextInEvent(
                     target=node.id,
                     handle="arg_0",
                     type=EventType.NEXT,
                     value=[],
                     current_t=t,
                 )
-                done_event = InEvent(
+                done_event = CompleteInEvent(
                     target=node.id,
                     handle="arg_0",
                     type=EventType.COMPLETE,
@@ -283,8 +294,10 @@ class FlowActor(Actor):
                     source=event.source,
                     handle=event.handle,
                     caused_by=event.caused_by,
-                    value=event.value,
-                    exception=str(event.exception) if event.exception else None,
+                    value=event.value if event.type == EventType.NEXT else None,
+                    exception=str(event.exception)
+                    if event.type == EventType.ERROR
+                    else None,
                     kind=event.type,
                     t=t,
                 )
@@ -313,10 +326,15 @@ class FlowActor(Actor):
                             source=spawned_event.target,
                             handle="return_0",
                             caused_by=event.caused_by,
-                            value=spawned_event.value,
+                            value=(
+                                spawned_event.value
+                                if isinstance(spawned_event, NextInEvent)
+                                else None
+                            ),
+                            # If it is an error event, we need to set the exception
                             exception=(
                                 str(spawned_event.exception)
-                                if spawned_event.exception
+                                if isinstance(spawned_event, ErrorInEvent)
                                 else None
                             ),
                             kind=spawned_event.type,

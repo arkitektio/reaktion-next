@@ -2,7 +2,7 @@ import asyncio
 from typing import List, Optional
 from reaktion_next.atoms.helpers import index_for_handle
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent, InEvent
+from reaktion_next.events import EventType, OutEvent, NextInEvent
 import logging
 import functools
 from typing import Optional
@@ -12,17 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class WithLatestAtom(CombinationAtom):
-    state: List[Optional[InEvent]] = Field(default_factory=lambda: [None, None])
+    state: List[Optional[NextInEvent]] = Field(default_factory=lambda: [None, None])
 
     async def run(self):
-        self.state = list(map(lambda x: None, self.node.instream))
+        self.state = list(map(lambda x: None, self.node.ins))
         try:
             while True:
                 event = await self.get()
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        NextInEvent(
                             handle="return_0",
                             type=EventType.ERROR,
                             exception=event.exception,

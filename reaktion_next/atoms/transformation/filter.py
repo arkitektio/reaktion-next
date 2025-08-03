@@ -1,7 +1,13 @@
 import asyncio
 from typing import List
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent
+from reaktion_next.events import (
+    CompleteOutEvent,
+    ErrorOutEvent,
+    EventType,
+    NextOutEvent,
+    OutEvent,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -19,9 +25,8 @@ class FilterAtom(CombinationAtom):
                 if event.type == EventType.ERROR:
                     for index, stream in enumerate(self.node.outstream):
                         await self.transport.put(
-                            OutEvent(
+                            ErrorOutEvent(
                                 handle=f"return_{index}",
-                                type=EventType.ERROR,
                                 exception=event.exception,
                                 source=self.node.id,
                                 caused_by=[event.current_t],
@@ -34,9 +39,8 @@ class FilterAtom(CombinationAtom):
                     real_value = value["value"]
                     index = value["use"]
                     await self.transport.put(
-                        OutEvent(
+                        NextOutEvent(
                             handle=f"return_{index}",
-                            type=EventType.NEXT,
                             value=(real_value,),
                             source=self.node.id,
                             caused_by=[event.current_t],
@@ -46,9 +50,8 @@ class FilterAtom(CombinationAtom):
                 if event.type == EventType.COMPLETE:
                     for index, stream in enumerate(self.node.outstream):
                         await self.transport.put(
-                            OutEvent(
+                            CompleteOutEvent(
                                 handle=f"return_{index}",
-                                type=EventType.COMPLETE,
                                 source=self.node.id,
                                 caused_by=[event.current_t],
                             )

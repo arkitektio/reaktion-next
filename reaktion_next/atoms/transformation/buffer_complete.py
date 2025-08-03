@@ -1,7 +1,7 @@
 import asyncio
 from typing import List
 from reaktion_next.atoms.transformation.base import TransformationAtom
-from reaktion_next.events import EventType, OutEvent, InEvent
+from reaktion_next.events import EventType, OutEvent, InEvent, NextInEvent, ErrorOutEvent, CompleteOutEvent, NextOutEvent
 import logging
 from pydantic import Field
 from functools import reduce
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class BufferCompleteAtom(TransformationAtom):
-    buffer: List[InEvent] = Field(default_factory=list)
+    buffer: List[NextInEvent] = Field(default_factory=list)
 
     async def run(self):
         try:
@@ -19,7 +19,7 @@ class BufferCompleteAtom(TransformationAtom):
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
                             exception=event.exception,
@@ -34,9 +34,8 @@ class BufferCompleteAtom(TransformationAtom):
 
                 if event.type == EventType.COMPLETE:
                     await self.transport.put(
-                        OutEvent(
+                        NextOutEvent(
                             handle="return_0",
-                            type=EventType.NEXT,
                             value=[
                                 reduce(lambda a, b: a + list(b.value), self.buffer, [])
                             ],  # double brakcets because its  alist :)
@@ -46,10 +45,9 @@ class BufferCompleteAtom(TransformationAtom):
                     )
 
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
                             type=EventType.COMPLETE,
-                            value=[],
                             source=self.node.id,
                             caused_by=[ev.current_t for ev in self.buffer],
                         )

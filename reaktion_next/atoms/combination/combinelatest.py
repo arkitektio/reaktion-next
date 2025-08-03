@@ -1,17 +1,16 @@
 import asyncio
 from typing import List, Optional
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, NextEvent, OutEvent, InEvent
+from reaktion_next.events import NextInEvent, EventType, ErrorOutEvent, CompleteOutEvent, NextOutEvent
 import logging
 from pydantic import Field
-import functools
 from reaktion_next.atoms.helpers import index_for_handle
 
 logger = logging.getLogger(__name__)
 
 
 class CombineLatestAtom(CombinationAtom):
-    state: List[Optional[NextEvent]] = Field(default_factory=lambda: [None, None])
+    state: List[Optional[NextInEvent]] = Field(default_factory=lambda: [None, None])
 
     async def run(self):
         try:
@@ -20,10 +19,8 @@ class CombineLatestAtom(CombinationAtom):
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
-                            value=None,
                             exception=event.exception,
                             source=self.node.id,
                             caused_by=(event.current_t,),
@@ -36,12 +33,10 @@ class CombineLatestAtom(CombinationAtom):
                 if event.type == EventType.COMPLETE:
                     if streamIndex == 0:
                         await self.transport.put(
-                            OutEvent(
+                            CompleteOutEvent(
                                 handle="return_0",
                                 type=EventType.COMPLETE,
                                 source=self.node.id,
-                                value=None,
-                                exception=None,
                                 caused_by=(event.current_t,),
                             )
                         )
@@ -51,16 +46,26 @@ class CombineLatestAtom(CombinationAtom):
                     self.state[streamIndex] = event
 
                     if all(map(lambda x: x is not None, self.state)):
+                        
+                        next = ()
+                        caused_by = ()
+                        
+                        for i in range(len(self.state)):
+                            inevent = self.state[i]
+                            if inevent is not None:
+                                next += inevent.value
+                                caused_by += (inevent.current_t,)
+                                
+                            
+                            
+                        
+                        
                         await self.transport.put(
-                            OutEvent(
+                            NextOutEvent(
                                 handle="return_0",
-                                type=EventType.NEXT,
-                                value=functools.reduce(
-                                    lambda a, b: a.value + b.value, self.state
-                                ),
-                                exception=None,
+                                value=next,
                                 source=self.node.id,
-                                caused_by=map(lambda x: x.current_t, self.state),
+                                caused_by=caused_by
                             )
                         )
 

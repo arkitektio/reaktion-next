@@ -21,7 +21,7 @@ class ArkitektFilterAtom(FilterAtom):
     node: RekuestFilterActionNode
     contract: RPCContract
 
-    async def filter(self, event: InEvent) -> Optional[bool]:
+    async def filter(self, event: InEvent) -> bool:
         kwargs = self.set_values
 
         stream_one = self.node.ins[0]

@@ -4,8 +4,6 @@ from rekuest_next.agents.base import BaseAgent
 import logging
 from rekuest_next.actors.base import Actor
 from fluss_next.api.schema import aget_flow
-
-from typing import Optional
 from rekuest_next.api.schema import (
     ImplementationInput,
 )

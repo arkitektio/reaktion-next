@@ -1,19 +1,16 @@
 import asyncio
-from typing import List, Optional
+from typing import  Optional
 from reaktion_next.atoms.helpers import index_for_handle
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent, InEvent
+from reaktion_next.events import EventType, OutEvent, NextInEvent, ErrorInEvent, ErrorOutEvent, NextOutEvent, CompleteOutEvent
 import logging
-import functools
-import asyncio
 from typing import Optional
-from pydantic import Field
 
 logger = logging.getLogger(__name__)
 
 
 class GateAtom(CombinationAtom):
-    buffer: Optional[asyncio.Queue] = None
+    buffer: Optional[asyncio.Queue[NextInEvent]] = None
 
     async def run(self):
         self.buffer = asyncio.Queue()
@@ -27,12 +24,12 @@ class GateAtom(CombinationAtom):
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break
@@ -43,10 +40,8 @@ class GateAtom(CombinationAtom):
                     if streamIndex == 0:
                         if forward_first:
                             await self.transport.put(
-                                OutEvent(
+                                CompleteOutEvent(
                                     handle="return_0",
-                                    type=EventType.COMPLETE,
-                                    value=event.value,
                                     source=self.node.id,
                                     caused_by=[event.current_t],
                                 )
@@ -60,12 +55,11 @@ class GateAtom(CombinationAtom):
                     if streamIndex == 0:
                         if forward_first:
                             await self.transport.put(
-                                OutEvent(
+                                NextOutEvent(
                                     handle="return_0",
-                                    type=EventType.NEXT,
                                     value=event.value,
                                     source=self.node.id,
-                                    caused_by=[event.current_t],
+                                    caused_by=(event.current_t,)
                                 )
                             )
                             forward_first = False
@@ -82,7 +76,7 @@ class GateAtom(CombinationAtom):
                             get_event = await self.buffer.get()
                             if get_event.type == EventType.COMPLETE:
                                 await self.transport.put(
-                                    OutEvent(
+                                     CompleteOutEvent(
                                         handle="return_0",
                                         type=EventType.COMPLETE,
                                         source=self.node.id,

@@ -7,10 +7,18 @@ from fluss_next.api.schema import (
     ReactiveImplementation,
     ArgNode,
     ReturnNode,
-    GlobalArg,
     Flow,
 )
-from .events import OutEvent, InEvent
+from .events import (
+    NextInEvent,
+    NextOutEvent,
+    ErrorInEvent,
+    ErrorOutEvent,
+    CompleteInEvent,
+    CompleteOutEvent,
+    OutEvent,
+    InEvent,
+)
 import pydantic
 from .errors import FlowLogicError
 
@@ -20,19 +28,36 @@ def connected_events(graph: Graph, event: OutEvent, t: int) -> List[InEvent]:
 
     for edge in graph.edges:
         if edge.source == event.source and edge.source_handle == event.handle:
-            try:
-                events.append(
-                    InEvent(
-                        target=edge.target,
-                        handle=edge.target_handle,
-                        type=event.type,
-                        value=event.value,
-                        exception=event.exception,
-                        current_t=t,
+            match event:
+                case NextOutEvent():
+                    events.append(
+                        NextInEvent(
+                            target=edge.target,
+                            handle=edge.target_handle,
+                            value=event.value,
+                            current_t=t,
+                        )
                     )
-                )
-            except pydantic.ValidationError as e:
-                raise FlowLogicError(f"Invalid event for {edge} : {event}") from e
+                case ErrorOutEvent():
+                    events.append(
+                        ErrorInEvent(
+                            target=edge.target,
+                            handle=edge.target_handle,
+                            exception=event.exception,
+                            current_t=t,
+                        )
+                    )
+
+                case CompleteOutEvent():
+                    events.append(
+                        CompleteInEvent(
+                            target=edge.target,
+                            handle=edge.target_handle,
+                            current_t=t,
+                        )
+                    )
+                case _:
+                    raise FlowLogicError(f"Unknown event type: {event}")
 
     return events
 

@@ -356,15 +356,15 @@ wheels = [
 
 [[package]]
 name = "fluss-next"
-version = "0.6.1"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "rath" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/cd/7a74afa5daf4c439406c846455eb426f7d0792caccd23f77f0bf7d68e1f2/fluss_next-0.6.1.tar.gz", hash = "sha256:3f9d6a74a94490edfee2c30a500bb1629f93732eb8b9ba66a5b1c5e92c9b222f", size = 21806 }
+sdist = { url = "https://files.pythonhosted.org/packages/5c/a6/fc55bd7dc0cd59e8e2628f92e475a316e5662f64b1c329d5f8b4d061df58/fluss_next-0.7.0.tar.gz", hash = "sha256:143c20e2d9c8e507fcf8e8891541f0bb84dc9037d5ae3a2f64a6be0c4dbe1463", size = 21322 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/dc/c9/3ba86efcbe4e22fe8abd9389bb109be089b1ae97227eda85fd07310f26bc/fluss_next-0.6.1-py3-none-any.whl", hash = "sha256:384d5939b5915f5190ffa25c85360775ad5d464849daeda4a1f9e279b599b6d9", size = 24786 },
+    { url = "https://files.pythonhosted.org/packages/8c/56/65c213323a1e489297c72903452030b47066a0d3579ff3bccfec2f2c0e02/fluss_next-0.7.0-py3-none-any.whl", hash = "sha256:62e70211f62743af8470179eae1676d5c941379985bb489292a4a847027ccc3b", size = 24294 },
 ]
 
 [[package]]
@@ -1039,24 +1039,25 @@ wheels = [
 
 [[package]]
 name = "rath"
-version = "3.4.0"
+version = "3.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "graphql-core" },
     { name = "koil" },
     { name = "pydantic" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/24/af/0fbf6bdad464fc9b5dbfc6991dcedb0d1dfb4a28c1cacea6c90f4195df09/rath-3.4.0.tar.gz", hash = "sha256:8a48614db2981f3e28c518eb04d02744fbb2f2e7e59db1c464f7fde8e6abe3ae", size = 33328 }
+sdist = { url = "https://files.pythonhosted.org/packages/14/d1/66585d55053a4b013a7be130c4e16b0828eeebe743f78131e9dcd721b8c8/rath-3.5.1.tar.gz", hash = "sha256:94d661627700db006f3491469ac91389c40ca612518a387f26820d19d855f3e9", size = 32743 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/73/9a/2ed456f855b5172ed387a0e9fbdd5c519b9c707ca985b1622ab194ce94e3/rath-3.4.0-py3-none-any.whl", hash = "sha256:abceea721eb51e44defb57127d6f0c07859ff16dfd42afd76f390265ca80a73f", size = 49479 },
+    { url = "https://files.pythonhosted.org/packages/8f/83/a7fbe223d6d52c2f6895c01ec07c4fd119a632d9d0b33be4834408527a9c/rath-3.5.1-py3-none-any.whl", hash = "sha256:402069e6c5c1a35bf2f611ee527249cfa608c519a6c432745b4afd01fa5ea64e", size = 48234 },
 ]
 
 [[package]]
 name = "reaktion-next"
-version = "0.1.0"
+version = "0.3.0"
 source = { editable = "." }
 dependencies = [
     { name = "fluss-next" },
+    { name = "rath" },
     { name = "rekuest-next" },
 ]
 
@@ -1076,8 +1077,9 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fluss-next", specifier = ">=0.6.1" },
-    { name = "rekuest-next", specifier = ">=0.8.1" },
+    { name = "fluss-next", specifier = ">=0.7.0" },
+    { name = "rath", specifier = ">=3.5.1" },
+    { name = "rekuest-next", specifier = ">=0.12.2" },
 ]
 
 [package.metadata.requires-dev]
@@ -1096,7 +1098,7 @@ dev = [
 
 [[package]]
 name = "rekuest-next"
-version = "0.8.1"
+version = "0.12.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "docstring-parser" },
@@ -1108,9 +1110,9 @@ dependencies = [
     { name = "rath" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/21/a3/260fa89888b5b74f38210b11eb58141c743e2fe30310a230efe4a7834019/rekuest_next-0.8.1.tar.gz", hash = "sha256:75bc7e79a141c3b5c8a058d2302698a3b8e7650d8db8c12dafc2347f3f43d7ef", size = 101844 }
+sdist = { url = "https://files.pythonhosted.org/packages/ce/83/e93d32ec2b7b45c5ba0cac6232651ff5cede9485e9d2792c610bee86aa36/rekuest_next-0.12.2.tar.gz", hash = "sha256:a4e98ce24882d37ec41614edc49320a89088066522be2e6660e7a54286703426", size = 103585 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/57/9e54b468b89dac73c1e64087a9d00275de057fd31e7515e07c3f4815112a/rekuest_next-0.8.1-py3-none-any.whl", hash = "sha256:62988ed97c1bde3e80853370c5faf5d070c2ac0d687454c97ad2a5834d2bd6b5", size = 137497 },
+    { url = "https://files.pythonhosted.org/packages/e3/c2/58fc1155cfe1be78dab69a7260e06c5cca44acd3cb2d694d6dec866c1fd4/rekuest_next-0.12.2-py3-none-any.whl", hash = "sha256:91532b0ac045abe219cc5747a7e47fb357790c647853002e18509d4c96fed8d6", size = 140037 },
 ]
 
 [[package]]

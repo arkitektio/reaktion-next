@@ -1,7 +1,12 @@
 import asyncio
 from typing import List
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent
+from reaktion_next.events import (
+    EventType,
+    NextOutEvent,
+    ErrorOutEvent,
+    CompleteOutEvent,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,40 +21,36 @@ class SplitAtom(CombinationAtom):
                 event = await self.get()
 
                 if event.type == EventType.ERROR:
-                    for index, stream in enumerate(self.node.outstream):
+                    for index, stream in enumerate(self.node.outs):
                         await self.transport.put(
-                            OutEvent(
+                            ErrorOutEvent(
                                 handle=f"return_{index}",
-                                type=EventType.ERROR,
                                 exception=event.exception,
                                 source=self.node.id,
-                                caused_by=[event.current_t],
+                                caused_by=(event.current_t,),
                             )
                         )
                     break
 
                 if event.type == EventType.NEXT:
-                    for index, stream in enumerate(self.node.outstream):
+                    for index, stream in enumerate(self.node.outs):
                         if event.value[index] is not None:
                             await self.transport.put(
-                                OutEvent(
+                                NextOutEvent(
                                     handle=f"return_{index}",
-                                    type=EventType.NEXT,
                                     value=(event.value[index],),
                                     source=self.node.id,
-                                    caused_by=[event.current_t],
+                                    caused_by=(event.current_t,),
                                 )
                             )
 
                 if event.type == EventType.COMPLETE:
-                    for index, stream in enumerate(self.node.outstream):
+                    for index, stream in enumerate(self.node.outs):
                         await self.transport.put(
-                            OutEvent(
+                            CompleteOutEvent(
                                 handle=f"return_{index}",
-                                type=EventType.COMPLETE,
-                                value=None,
                                 source=self.node.id,
-                                caused_by=[event.current_t],
+                                caused_by=(event.current_t,),
                             )
                         )
                     break

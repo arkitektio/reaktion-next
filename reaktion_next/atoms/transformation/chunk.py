@@ -1,7 +1,13 @@
 import asyncio
 from typing import List
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent
+from reaktion_next.events import (
+    CompleteOutEvent,
+    ErrorOutEvent,
+    EventType,
+    NextOutEvent,
+    OutEvent,
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,9 +27,8 @@ class ChunkAtom(CombinationAtom):
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
@@ -32,20 +37,19 @@ class ChunkAtom(CombinationAtom):
                     break
 
                 if event.type == EventType.NEXT:
-                    assert (
-                        len(event.value) == 1
-                    ), "ChunkAtom only supports flattening one value"
+                    assert len(event.value) == 1, (
+                        "ChunkAtom only supports flattening one value"
+                    )
 
-                    assert isinstance(
-                        event.value[0], list
-                    ), "ChunkAtom only supports flattening lists"
+                    assert isinstance(event.value[0], list), (
+                        "ChunkAtom only supports flattening lists"
+                    )
 
                     for i in range(iterations):
                         for value in event.value[0]:
                             await self.transport.put(
-                                OutEvent(
+                                NextOutEvent(
                                     handle="return_0",
-                                    type=EventType.NEXT,
                                     value=[value],
                                     source=self.node.id,
                                     caused_by=[event.current_t],
@@ -62,9 +66,8 @@ class ChunkAtom(CombinationAtom):
 
                 if event.type == EventType.COMPLETE:
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
-                            type=EventType.COMPLETE,
                             value=[],
                             source=self.node.id,
                             caused_by=[event.current_t],

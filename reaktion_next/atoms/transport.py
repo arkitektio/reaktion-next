@@ -4,7 +4,7 @@ from reaktion_next.events import OutEvent
 
 
 class AtomTransport(BaseModel):
-    queue: asyncio.Queue
+    queue: asyncio.Queue[OutEvent]
     model_config = ConfigDict(arbitrary_types_allowed=True)
     
     
@@ -17,7 +17,7 @@ class AtomTransport(BaseModel):
 
 
 class MockTransport(AtomTransport):
-    async def get(self, timeout=3) -> OutEvent:
+    async def get(self, timeout: float =3) -> OutEvent:
         return await asyncio.wait_for(self.queue.get(), timeout=timeout)
 
     pass

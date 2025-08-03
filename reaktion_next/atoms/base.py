@@ -11,21 +11,23 @@ from reaktion_next.reference_counter import ReferenceCounter
 from rekuest_next.actors.base import Actor
 from pydantic import BaseModel, ConfigDict
 from typing import Dict, Any
+from reaktion_next.events import InEvent, OutEvent, EventType, ErrorOutEvent
 
 logger = logging.getLogger(__name__)
 
 
 class Atom(BaseModel):
-    """ Base class for all atoms."""
+    """Base class for all atoms."""
+
     node: BaseGraphNodeBase
     reference_counter: ReferenceCounter
     transport: AtomTransport
     globals: Dict[str, Any] = Field(default_factory=dict)
     hold_references: Dict[str, Any] = Field(default_factory=dict)
-    _private_queue: asyncio.Queue = None
+    _private_queue: Optional[asyncio.Queue[InEvent]] = None
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    async def run(self):
+    async def run(self) -> None:
         raise NotImplementedError("This needs to be implemented")
 
     async def get(self) -> InEvent:
@@ -43,9 +45,8 @@ class Atom(BaseModel):
         except Exception as e:
             logger.error(f"{self.node.id} FAILED", exc_info=True)
             await self.transport.put(
-                OutEvent(
+                ErrorOutEvent(
                     handle="return_0",
-                    type=EventType.ERROR,
                     source=self.node.id,
                     exception=e,
                     caused_by=[-1],

@@ -9,8 +9,9 @@ authors = [{ name = "jhnnsrs", email = "jhnnsrs@gmail.com" }]
 requires-python = ">=3.11, <4.0"
 license = "GPL-3.0-or-later"
 dependencies = [
-    "fluss-next>=0.6.1",
-    "rekuest-next>=0.8.1",
+    "fluss-next>=0.7.0",
+    "rath>=3.5.1",
+    "rekuest-next>=0.12.2",
 ]
 
 

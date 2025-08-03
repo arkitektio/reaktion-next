@@ -1,3 +1,4 @@
+from types import TracebackType
 from typing import Any, AsyncGenerator, Dict, Optional, Protocol, runtime_checkable
 from koil.composition.base import KoiledModel
 from rekuest_next.api.schema import Action
@@ -10,6 +11,12 @@ class RPCContract(Protocol):
     """An RPC contract is a protocol that defines how
     to call a function or generator in a blocking or non-blocking way.
     """
+
+    async def aenter(self) -> "RPCContract":
+        """Enter the context manager for the RPC contract.
+        This method should be implemented by the subclass.
+        """
+        ...
 
     async def __aenter__(self) -> "RPCContract": ...
 
@@ -31,10 +38,18 @@ class RPCContract(Protocol):
         timeout_is_recoverable: bool = False,
     ): ...
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+        ...
+    
 
     def __enter__(self) -> "RPCContract":
-        return super().__enter__()
+        ...
+
+    async def aexit(self) -> "RPCContract":
+        """Enter the context manager for the RPC contract.
+        This method should be implemented by the subclass.
+        """
+        return self
 
 
 class DirectContract(KoiledModel):
@@ -45,7 +60,8 @@ class DirectContract(KoiledModel):
     action: Action
     reference: str
 
-    async def __aenter__(self) -> "RPCContract": ...
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+        return await super().__aexit__(exc_type, exc_val, exc_tb)
 
     async def acall_raw(
         self,
@@ -86,8 +102,9 @@ class DirectContract(KoiledModel):
             assign_timeout=assign_timeout,
             timeout_is_recoverable=timeout_is_recoverable,
         )
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb): ...
-
-    def __enter__(self) -> "RPCContract":
-        return super().__enter__()
+        
+    async def aenter(self) -> "DirectContract":
+        """Enter the context manager for the direct contract.
+        This method should be implemented by the subclass.
+        """
+        return self

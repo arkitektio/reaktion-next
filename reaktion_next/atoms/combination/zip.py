@@ -2,7 +2,7 @@ import asyncio
 from typing import List, Optional, Deque
 from collections import deque
 from reaktion_next.atoms.combination.base import CombinationAtom
-from reaktion_next.events import EventType, OutEvent, InEvent
+from reaktion_next.events import EventType, NextInEvent,  CompleteInEvent, ErrorOutEvent, CompleteOutEvent, NextOutEvent
 import logging
 from pydantic import Field
 from reaktion_next.atoms.helpers import index_for_handle
@@ -12,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class ZipAtom(CombinationAtom):
-    state: List[Optional[InEvent]] = Field(default_factory=lambda: [None, None])
-    complete: List[Optional[InEvent]] = Field(default_factory=lambda: [None, None])
-    buffer: List[Deque[InEvent]] = Field(
+    state: List[Optional[NextInEvent]] = Field(default_factory=lambda: [None, None])
+    complete: List[Optional[CompleteInEvent]] = Field(default_factory=lambda: [None, None])
+    buffer: List[Deque[NextInEvent]] = Field(
         default_factory=lambda: [deque(), deque()]
     )  # Buffers for each input
 
@@ -31,12 +31,12 @@ class ZipAtom(CombinationAtom):
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break
@@ -45,7 +45,7 @@ class ZipAtom(CombinationAtom):
                     self.complete[index_for_handle(event.handle)] = event
                     if all(map(lambda x: x is not None, self.complete)):
                         await self.transport.put(
-                            OutEvent(
+                            CompleteOutEvent(
                                 handle="return_0",
                                 type=EventType.COMPLETE,
                                 source=self.node.id,
@@ -65,7 +65,7 @@ class ZipAtom(CombinationAtom):
                         # If so, pop from each buffer and zip the events
                         self.state = [buffer.popleft() for buffer in self.buffer]
                         await self.transport.put(
-                            OutEvent(
+                            NextOutEvent(
                                 handle="return_0",
                                 type=EventType.NEXT,
                                 source=self.node.id,

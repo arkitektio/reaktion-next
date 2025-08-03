@@ -11,9 +11,11 @@ def build_relative(path):
 def expectnext(event: OutEvent):
     if event.type != EventType.NEXT:
         if event.type == EventType.ERROR:
-            raise event.value
+            raise event.exception
         else:
             raise Exception(f"Unexpected event: {event}")
+        
+    return event
 
 
 def expecterror(event: OutEvent):

@@ -1,5 +1,14 @@
 import asyncio
-from reaktion_next.events import OutEvent, Returns, EventType, InEvent
+from reaktion_next.events import (
+    OutEvent,
+    Returns,
+    EventType,
+    InEvent,
+    NextInEvent,
+    NextOutEvent,
+    ErrorOutEvent,
+    CompleteOutEvent,
+)
 from reaktion_next.atoms.base import Atom
 import logging
 from pydantic import Field
@@ -10,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 class FilterAtom(Atom):
-    async def filter(self, event: InEvent) -> bool:
+    async def filter(self, event: NextInEvent) -> bool:
         raise NotImplementedError("This needs to be implemented")
 
     async def run(self):
@@ -20,26 +29,26 @@ class FilterAtom(Atom):
 
                 if event.type == EventType.NEXT:
                     try:
+                        # we are using the filter method to determine if we want to pass the event
+                        # to the next atom or not
                         result = await self.filter(event)
                         if result is True:
                             await self.transport.put(
-                                OutEvent(
+                                NextOutEvent(
                                     handle="return_0",
-                                    type=EventType.NEXT,
                                     value=event.value,
                                     source=self.node.id,
-                                    caused_by=[event.current_t],
+                                    caused_by=(event.current_t,),
                                 )
                             )
                     except Exception as e:
                         logger.error(f"{self.node.id} map failed", exc_info=True)
                         await self.transport.put(
-                            OutEvent(
+                            ErrorOutEvent(
                                 handle="return_0",
-                                type=EventType.ERROR,
                                 source=self.node.id,
-                                value=e,
-                                caused_by=[event.current_t],
+                                exception=e,
+                                caused_by=(event.current_t,),
                             )
                         )
                         break
@@ -47,23 +56,21 @@ class FilterAtom(Atom):
                 if event.type == EventType.COMPLETE:
                     # Everything left of us is done, so we can shut down as well
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
-                            type=EventType.COMPLETE,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break  # Everything left of us is done, so we can shut down as well
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
-                            value=event.value,
+                            exception=event.exception,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break
@@ -94,23 +101,22 @@ class MapAtom(Atom):
                             value = (result,)
 
                         await self.transport.put(
-                            OutEvent(
+                            NextOutEvent(
                                 handle="return_0",
-                                type=EventType.NEXT,
                                 value=value,
                                 source=self.node.id,
-                                caused_by=[event.current_t],
+                                caused_by=(event.current_t,),
                             )
                         )
                     except Exception as e:
                         logger.error(f"{self.node.id} map failed", exc_info=True)
                         await self.transport.put(
-                            OutEvent(
+                            ErrorOutEvent(
                                 handle="return_0",
                                 type=EventType.ERROR,
                                 source=self.node.id,
                                 exception=e,
-                                caused_by=[event.current_t],
+                                caused_by=(event.current_t,),
                             )
                         )
                         break
@@ -118,23 +124,21 @@ class MapAtom(Atom):
                 if event.type == EventType.COMPLETE:
                     # Everything left of us is done, so we can shut down as well
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
-                            type=EventType.COMPLETE,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break  # Everything left of us is done, so we can shut down as well
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break
@@ -165,24 +169,23 @@ class MergeMapAtom(Atom):
                             else:
                                 value = (result,)
                             await self.transport.put(
-                                OutEvent(
+                                NextOutEvent(
                                     handle="return_0",
-                                    type=EventType.NEXT,
                                     value=value,
                                     source=self.node.id,
-                                    caused_by=[event.current_t],
+                                    caused_by=(event.current_t,),
                                 )
                             )
 
                     except Exception as e:
                         logger.error(f"{self.node.id} map failed")
                         await self.transport.put(
-                            OutEvent(
+                            ErrorOutEvent(
                                 handle="return_0",
                                 type=EventType.ERROR,
                                 source=self.node.id,
                                 exception=e,
-                                caused_by=[event.current_t],
+                                caused_by=(event.current_t,),
                             )
                         )
                         break
@@ -190,23 +193,21 @@ class MergeMapAtom(Atom):
                 if event.type == EventType.COMPLETE:
                     # Everything left of us is done, so we can shut down as well
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
-                            type=EventType.COMPLETE,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break  # Everything left of us is done, so we can shut down as well
 
                 if event.type == EventType.ERROR:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
-                            caused_by=[event.current_t],
+                            caused_by=(event.current_t,),
                         )
                     )
                     break
@@ -231,21 +232,20 @@ class OrderedAtom(Atom):
                 exception = task.exception()
                 if exception:
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
                             type=EventType.ERROR,
-                            exception=exception,
                             source=self.node.id,
-                            caused_by=[key],
+                            exception=exception,
+                            caused_by=(key,),
                         )
                     )
                 else:
                     if key in self.publish_queue:
                         if self.publish_queue[0] == key:
                             await self.transport.put(
-                                OutEvent(
+                                NextOutEvent(
                                     handle="return_0",
-                                    type=EventType.NEXT,
                                     value=task.result(),
                                     source=self.node.id,
                                     caused_by=[key],
@@ -286,9 +286,8 @@ class OrderedAtom(Atom):
                     except asyncio.CancelledError:
                         pass
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
-                            type=EventType.COMPLETE,
                             source=self.node.id,
                             caused_by=[event.current_t],
                         )
@@ -310,9 +309,8 @@ class OrderedAtom(Atom):
                         pass
 
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],
@@ -346,9 +344,8 @@ class AsCompletedAtom(Atom):
                 if exception:
                     logger.error(f"{self.node.id} map failed with {exception}")
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
                             exception=exception,
                             source=self.node.id,
                             caused_by=[key],
@@ -357,9 +354,8 @@ class AsCompletedAtom(Atom):
 
                 else:
                     await self.transport.put(
-                        OutEvent(
+                        NextOutEvent(
                             handle="return_0",
-                            type=EventType.NEXT,
                             value=task.result(),
                             source=self.node.id,
                             caused_by=[key],
@@ -397,7 +393,7 @@ class AsCompletedAtom(Atom):
                     except asyncio.CancelledError:
                         pass
                     await self.transport.put(
-                        OutEvent(
+                        CompleteOutEvent(
                             handle="return_0",
                             type=EventType.COMPLETE,
                             source=self.node.id,
@@ -421,9 +417,8 @@ class AsCompletedAtom(Atom):
                         pass
 
                     await self.transport.put(
-                        OutEvent(
+                        ErrorOutEvent(
                             handle="return_0",
-                            type=EventType.ERROR,
                             exception=event.exception,
                             source=self.node.id,
                             caused_by=[event.current_t],

@@ -1,7 +1,7 @@
 import pytest
 from .utils import expectnext
 import asyncio
-from reaktion_next.events import InEvent, EventType
+from reaktion_next.events import  OutEvent, NextInEvent
 from reaktion_next.atoms.transport import MockTransport
 from .conftest import (
     ReactiveNode,
@@ -15,7 +15,7 @@ async def test_zip_node(
     reactive_zip_node: ReactiveNode,
 ) -> None:
     """ Test the zip atom with a reactive node. """
-    event_queue = asyncio.Queue()
+    event_queue = asyncio.Queue[OutEvent]()
     reference_counter = ReferenceCounter()
     atomtransport = MockTransport(queue=event_queue)
 
@@ -30,26 +30,25 @@ async def test_zip_node(
         await asyncio.sleep(0.1)
 
         await atom.put(
-            InEvent(
+            NextInEvent(
                 target=atom.node.id,
                 handle="arg_0",
-                type=EventType.NEXT,
                 value=([1, 2, 3],),
                 current_t=0,
             )
         )
 
         answer = await atomtransport.get(timeout=0.1)
-        expectnext(answer)
-        assert answer.value == (1,)
+        event = expectnext(answer)
+        assert event.value == (1,)
 
         answer = await atomtransport.get(timeout=0.1)
-        expectnext(answer)
-        assert answer.value == (2,)
+        event = expectnext(answer)
+        assert event.value == (2,)
 
         answer = await atomtransport.get(timeout=0.1)
-        expectnext(answer)
-        assert answer.value == (3,)
+        event = expectnext(answer)
+        assert event.value == (3,)
 
 
 
