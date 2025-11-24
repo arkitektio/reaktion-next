@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.4.1 (2025-11-24)
+
+### Bug Fixes
+
+- Better actor
+  ([`5dea3ab`](https://github.com/arkitektio/reaktion-next/commit/5dea3abd08e2a38006abab4965852e0c47e65aff))
+
+
 ## v0.4.0 (2025-08-03)
 
 
