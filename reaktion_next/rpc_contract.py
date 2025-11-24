@@ -38,12 +38,14 @@ class RPCContract(Protocol):
         timeout_is_recoverable: bool = False,
     ): ...
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
-        ...
-    
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None: ...
 
-    def __enter__(self) -> "RPCContract":
-        ...
+    def __enter__(self) -> "RPCContract": ...
 
     async def aexit(self) -> "RPCContract":
         """Enter the context manager for the RPC contract.
@@ -60,7 +62,12 @@ class DirectContract(KoiledModel):
     action: Action
     reference: str
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         return await super().__aexit__(exc_type, exc_val, exc_tb)
 
     async def acall_raw(
@@ -74,6 +81,7 @@ class DirectContract(KoiledModel):
         """Call the function or generator in a blocking or non-blocking way.
         This method should be implemented by the subclass.
         """
+        print("DirectContract acall_raw called with kwargs:", self, parent, reference)
         return await acall_raw(
             kwargs=kwargs,
             action=self.action,
@@ -94,6 +102,9 @@ class DirectContract(KoiledModel):
         """Call the function or generator in a blocking or non-blocking way.
         This method should be implemented by the subclass.
         """
+        print(
+            "DirectContract aiterate_raw called with kwargs:", self, parent, reference
+        )
         return aiterate_raw(
             kwargs=kwargs,
             action=self.action,
@@ -102,7 +113,7 @@ class DirectContract(KoiledModel):
             assign_timeout=assign_timeout,
             timeout_is_recoverable=timeout_is_recoverable,
         )
-        
+
     async def aenter(self) -> "DirectContract":
         """Enter the context manager for the direct contract.
         This method should be implemented by the subclass.

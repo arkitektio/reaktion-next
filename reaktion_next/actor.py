@@ -317,6 +317,7 @@ class FlowActor(Actor):
                     logger.warning(f"No events spawned from {event}")
 
                 for spawned_event in spawned_events:
+                    print("spawned_event", spawned_event)
                     logger.info(f"-> {spawned_event}")
 
                     if spawned_event.target == returnNode.id:
@@ -373,6 +374,11 @@ class FlowActor(Actor):
                             "Unknown target. Your flow is connected wrong"
                         )
                         if spawned_event.target in atoms:
+                            print(
+                                "Putting event to atom",
+                                spawned_event,
+                                atoms[spawned_event.target],
+                            )
                             await atoms[spawned_event.target].put(spawned_event)
 
             for task in tasks:
