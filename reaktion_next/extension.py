@@ -57,11 +57,5 @@ class ReaktionExtension(BaseModel):
             agent=agent,
         )
 
-    async def aget_implementations(
-        self,
-    ) -> list[ImplementationInput]:
-        templates: list[ImplementationInput] = []
-        return templates
-
     async def atear_down(self):
         pass
