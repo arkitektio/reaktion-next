@@ -81,7 +81,6 @@ class DirectContract(KoiledModel):
         """Call the function or generator in a blocking or non-blocking way.
         This method should be implemented by the subclass.
         """
-        print("DirectContract acall_raw called with kwargs:", self, parent, reference)
         return await acall_raw(
             kwargs=kwargs,
             action=self.action,
@@ -102,9 +101,6 @@ class DirectContract(KoiledModel):
         """Call the function or generator in a blocking or non-blocking way.
         This method should be implemented by the subclass.
         """
-        print(
-            "DirectContract aiterate_raw called with kwargs:", self, parent, reference
-        )
         return aiterate_raw(
             kwargs=kwargs,
             action=self.action,

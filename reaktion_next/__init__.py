@@ -1,9 +1,11 @@
-try:
-    from .rekuest import ReaktionExtension
-except ImportError as e:
-    raise e
+"""Reaktion: runs fluss flows as a generic rekuest action.
 
-from reaktion_next.extension import ReaktionExtension
+Importing this package registers the ``run_flow`` implementation with the
+default app registry (see :mod:`reaktion_next.rekuest`).
+"""
 
+from .actions import run_flow
+from .engine import arun_flow
+from .rekuest import run_flow_definition
 
-__all__ = ["structure_reg", "ReaktionExtension"]
+__all__ = ["run_flow", "arun_flow", "run_flow_definition"]
