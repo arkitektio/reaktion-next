@@ -1,8 +1,16 @@
 # reaktion-next
 
+> # ⚠️ DEPRECATED — do not use for new work
+>
+> The flow engine that lived here has been **absorbed into
+> [`fluss`](https://github.com/arkitektio/fluss)** and now ships as `fluss.engine`.
+> There is no separate `reaktion-next` distribution any more.
+>
+> **Use `fluss>=2` and import from `fluss.engine` instead.** Nothing here is maintained.
+
 [![codecov](https://codecov.io/gh/arkitektio/omero-ark/branch/master/graph/badge.svg?token=UGXEA2THBV)](https://codecov.io/gh/arkitektio/arkitektio)
 [![PyPI version](https://badge.fury.io/py/rekuest_next.svg)](https://pypi.org/project/rekuest/)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://pypi.org/project/rekuest/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-no-red.svg)](https://pypi.org/project/rekuest/)
 ![Maintainer](https://img.shields.io/badge/maintainer-jhnnsrs-blue)
 [![PyPI pyversions](https://img.shields.io/pypi/pyversions/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
 [![PyPI status](https://img.shields.io/pypi/status/rekuest_next.svg)](https://pypi.python.org/pypi/rekuest/)
